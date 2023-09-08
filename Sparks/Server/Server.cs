@@ -75,7 +75,28 @@ namespace GoldenSparks {
                 Logger.LogError("Downloading " + file +" failed, try again later", ex);
             }
         }
+        static void CheckSQLiteFile()
+        {
+            string file = "sqlite3.dll";
+            if (File.Exists(file)) return;
 
+            Logger.Log(LogType.SystemActivity,"SQLite dll doesn't exist, Downloading..");
+            try
+            {
+                using (WebClient client = HttpUtil.CreateWebClient())
+                {
+                    client.DownloadFile(Updater.SQLiteURL, file);
+                }
+                if (File.Exists(file))
+                {
+                    Logger.Log(LogType.SystemActivity, "SQLite dll download succesful!");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError("Downloading " + file + " failed, try again later", ex);
+            }
+        }
         public static ConfigElement[] serverConfig, levelConfig, zoneConfig;
         public static void Start() {
             serverConfig = ConfigElement.GetAll(typeof(ServerConfig));
@@ -94,6 +115,7 @@ namespace GoldenSparks {
             ForceEnableTLS();
             
             CheckFile("MySql.Data.dll");
+            CheckSQLiteFile();
             CheckFile("sqlite3.dll");
 
             EnsureFilesExist();
