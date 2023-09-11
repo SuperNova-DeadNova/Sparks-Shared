@@ -41,11 +41,11 @@ namespace GoldenSparks {
         public static PlayerMetaList Notes = new PlayerMetaList("text/notes.txt");
         
         /// <summary> *** DO NOT USE THIS! *** Use VersionString, as this field is a constant and is inlined if used. </summary>
-        public const string InternalVersion = "1.0.4";
+        public const string InternalVersion = "1.0.5";
         public static string Version { get { return InternalVersion; } }
 
 
-        public static string SoftwareName = "&6S&ep&6a&er&6k&ei&6e &eC&6o&er&6e&e";
+        public static string SoftwareName = "&6S&ep&6a&er&6k&ei&6e&e'&6s &eC&6o&er&6e&e";
 
         static string fullName;
         public static string SoftwareNameVersioned {
@@ -66,7 +66,7 @@ namespace GoldenSparks {
         public static PlayerExtList models, skins, reach, rotations, modelScales;
         public static PlayerExtList frozen, muted, tempBans, tempRanks;
         
-        public static readonly List<string> Devs = new List<string>() { "Hetal", "UclCommander", "RandomStranger05", "sethbatman05" };
+        public static readonly List<string> Devs = new List<string>() { "Hetal", "UclCommander", "GoldenSparks", "sethbatman05" };
         public static readonly List<string> Opstats = new List<string>() { "ban", "tempban", "xban", "banip", "kick", "warn", "mute", "freeze", "setrank" };
 
         public static Level mainLevel;
