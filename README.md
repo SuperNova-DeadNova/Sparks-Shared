@@ -2,7 +2,7 @@ This version of [my software](https://github.com/GoldenSparks/Sparkie) is based 
 
 
 
-[MCGalaxy](https://github.com/UnknownShadow200/MCGalaxy) is a fully featured and customisable **ClassiCube Server Software** based on [MCForge](https://github.com/OMARATION/mcforge)([Working Version](https://github.com/RandomStrangers/MCForge))(/[MCLawl](https://github.com/727021/MCLawl)([Working Version](https://github.com/RandomStrangers/MCLawl)).
+[MCGalaxy](https://github.com/UnknownShadow200/MCGalaxy) is a fully featured and customisable **ClassiCube Server Software** based on [MCForge](https://github.com/OMARATION/mcforge)([Working Version](https://github.com/RandomStrangers/MCForge))/[MCLawl](https://github.com/727021/MCLawl)([Working Version](https://github.com/RandomStrangers/MCLawl)).
 
 **Setup**
 -----------------
