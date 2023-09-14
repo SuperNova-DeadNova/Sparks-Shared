@@ -17,10 +17,10 @@
  */
 using System;
 using System.Collections.Generic;
-using MCGalaxy.Network;
-using MCGalaxy.Tasks;
+using GoldenSparks.Network;
+using GoldenSparks.Tasks;
 
-namespace MCGalaxy 
+namespace GoldenSparks 
 {
     public sealed partial class Server 
     {
@@ -40,10 +40,10 @@ namespace MCGalaxy
         public static PlayerMetaList Notes = new PlayerMetaList("text/notes.txt");
         
         /// <summary> *** DO NOT USE THIS! *** Use VersionString, as this field is a constant and is inlined if used. </summary>
-        public const string InternalVersion = "1.9.4.9";
+        public const string InternalVersion = "1.0.5.1";
         public static string Version { get { return InternalVersion; } }
         
-        public static string SoftwareName = "MCGalaxy";
+        public static string SoftwareName = "&6S&ep&6a&er&6k&ei&6e&e'&6s &eC&6o&er&6e&e";
         static string fullName;
         public static string SoftwareNameVersioned {
             // By default, if SoftwareName gets externally changed, that is reflected in SoftwareNameVersioned too
@@ -61,7 +61,7 @@ namespace MCGalaxy
         public static PlayerExtList models, skins, reach, rotations, modelScales;
         public static PlayerExtList bannedIP, frozen, muted, tempBans, tempRanks;
         
-        public static readonly List<string> Devs = new List<string>() { "Hetal", "UclCommander" };
+        public static readonly List<string> Devs = new List<string>() { "Hetal", "UclCommander", "GoldenSparks", "sethbatman05" };
         public static readonly List<string> Opstats = new List<string>() { "ban", "tempban", "xban", "banip", "kick", "warn", "mute", "freeze", "setrank" };
 
         public static Level mainLevel;
@@ -75,12 +75,12 @@ namespace MCGalaxy
         
         public static int YesVotes, NoVotes;
         public static bool voting;
-        public const int MAX_PLAYERS = 256;
+        public const int MAX_PLAYERS = 1024;
         
-        public static Scheduler MainScheduler = new Scheduler("MCG_MainScheduler");
-        public static Scheduler Background = new Scheduler("MCG_BackgroundScheduler");
-        public static Scheduler Critical = new Scheduler("MCG_CriticalScheduler");
-        public static Scheduler Heartbeats = new Scheduler("MCG_HeartbeatsScheduler");
+        public static Scheduler MainScheduler = new Scheduler("GS_MainScheduler");
+        public static Scheduler Background = new Scheduler("GS_BackgroundScheduler");
+        public static Scheduler Critical = new Scheduler("GS_CriticalScheduler");
+        public static Scheduler Heartbeats = new Scheduler("GS_HeartbeatsScheduler");
         public static Server s = new Server();
 
         public const byte VERSION_0016 = 3; // classic 0.0.16
