@@ -17,29 +17,22 @@
  */
 using System;
 using System.Net;
-using MCGalaxy.Network;
-using MCGalaxy.Tasks;
+using GoldenSparks.Network;
+using GoldenSparks.Tasks;
 
-namespace MCGalaxy 
+namespace GoldenSparks 
 {
     /// <summary> Checks for and applies software updates. </summary>
     public static class Updater 
     {    
-        public static string SourceURL = "https://github.com/UnknownShadow200/MCGalaxy";
-        public const string BaseURL    = "https://raw.githubusercontent.com/UnknownShadow200/MCGalaxy/master/";
-        public const string UploadsURL = "https://github.com/UnknownShadow200/MCGalaxy/tree/master/Uploads";
-        
+        public static string SourceURL = "https://github.com/GoldenSparks/Sparks/";
+        public const string BaseURL    = "https://github.com/GoldenSparks/Sparks/blob/Sparkie/";
+        public const string UploadsURL = "https://github.com/GoldenSparks/Sparks/tree/Sparkie/Uploads";
+                public const string UpdatesURL = "https://github.com/GoldenSparks/Sparks/raw/Sparkie/Uploads/";
         const string CurrentVersionURL = BaseURL + "Uploads/current_version.txt";
-#if MCG_STANDALONE
-        static string dllURL = "https://cs.classicube.net/mcgalaxy/" + IOperatingSystem.DetectOS().StandaloneName;
-#elif TEN_BIT_BLOCKS
-        const string dllURL = BaseURL + "Uploads/MCGalaxy_infid.dll";
-#else
-        const string dllURL = BaseURL + "Uploads/MCGalaxy_.dll";
-#endif
-        const string changelogURL = BaseURL + "Changelog.txt";
-        const string guiURL = BaseURL + "Uploads/MCGalaxy.exe";
-        const string cliURL = BaseURL + "Uploads/MCGalaxyCLI.exe";
+        const string dllURL = UpdatesURL + "Sparkie_.dll";
+        const string guiURL = UpdatesURL + "Sparkie.exe";
+        const string cliURL = UpdatesURL + "SparkieCLI.exe";
 
         public static event EventHandler NewerVersionDetected;
         
@@ -72,18 +65,15 @@ namespace MCGalaxy
         public static void PerformUpdate() {
             try {
                 try {
-                    DeleteFiles("Changelog.txt", "MCGalaxy_.update", "MCGalaxy.update", "MCGalaxyCLI.update",
-                                "prev_MCGalaxy_.dll", "prev_MCGalaxy.exe", "prev_MCGalaxyCLI.exe");
+                    DeleteFiles("Sparkie_.update", "Sparkie.update", "SparkieCLI.update",
+                                "prev_Sparkie_.dll", "prev_Sparkie.exe", "prev_SparkieCLI.exe");
                 } catch {
                 }
                 
                 WebClient client = HttpUtil.CreateWebClient();
-                client.DownloadFile(dllURL, "MCGalaxy_.update");
-#if !MCG_STANDALONE
-                client.DownloadFile(guiURL, "MCGalaxy.update");
-                client.DownloadFile(cliURL, "MCGalaxyCLI.update");
-#endif
-                client.DownloadFile(changelogURL, "Changelog.txt");
+                client.DownloadFile(dllURL, "Sparkie_.update");
+                client.DownloadFile(guiURL, "Sparkie.update");
+                client.DownloadFile(cliURL, "SparkieCLI.update");
 
                 Server.SaveAllLevels();
                 Player[] players = PlayerInfo.Online.Items;
@@ -93,14 +83,14 @@ namespace MCGalaxy
                 
                 // Move current files to previous files (by moving instead of copying, 
                 //  can overwrite original the files without breaking the server)
-                AtomicIO.TryMove(serverDLL,         "prev_MCGalaxy_.dll");
-                AtomicIO.TryMove("MCGalaxy.exe",    "prev_MCGalaxy.exe");
-                AtomicIO.TryMove("MCGalaxyCLI.exe", "prev_MCGalaxyCLI.exe");
+                AtomicIO.TryMove(serverDLL,         "prev_MSparkie_.dll");
+                AtomicIO.TryMove("Sparkie.exe",    "prev_Sparkie.exe");
+                AtomicIO.TryMove("SparkieCLI.exe", "prev_SparkieCLI.exe");
 
                 // Move update files to current files
-                AtomicIO.TryMove("MCGalaxy_.update",   serverDLL);
-                AtomicIO.TryMove("MCGalaxy.update",    "MCGalaxy.exe");
-                AtomicIO.TryMove("MCGalaxyCLI.update", "MCGalaxyCLI.exe");                             
+                AtomicIO.TryMove("Sparkie_.update",   serverDLL);
+                AtomicIO.TryMove("Sparkie.update",    "Sparkie.exe");
+                AtomicIO.TryMove("SparkieCLI.update", "SparkieCLI.exe");                             
 
                 Server.Stop(true, "Updating server.");
             } catch (Exception ex) {
