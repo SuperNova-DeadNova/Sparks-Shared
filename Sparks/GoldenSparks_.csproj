@@ -93,6 +93,7 @@
     <Compile Include="Chat\Colors.cs" />
     <Compile Include="Chat\EmotesHandler.cs" />
     <Compile Include="Chat\ChatTokens.cs" />
+    <Compile Include="Chat\Hi.cs" />
     <Compile Include="Chat\LineWrapper.cs" />
     <Compile Include="Chat\ProfanityFilter.cs" />
     <Compile Include="Commands\Alias.cs" />

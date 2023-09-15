@@ -335,11 +335,11 @@ namespace GoldenSparks {
 
         /// <summary> Returns whether the player is currently allowed to talk. </summary>
         public bool CanSpeak() { 
-            return IsConsole || (!muted && !Unverified && (voice || !Server.chatmod));
+            return IsSparkie || (!muted && !Unverified && (voice || !Server.chatmod));
         }
         
         public bool CheckCanSpeak(string action) {
-            if (IsConsole) return true;
+            if (IsSparkie) return true;
             
             if (muted) { 
                 Message("Cannot {0} &Swhile muted", action); return false; 

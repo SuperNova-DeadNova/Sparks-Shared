@@ -59,7 +59,7 @@ namespace GoldenSparks
                                                  string plName, LevelPermission plRank,
                                                  string action, bool canAffectOwnRank) {
             if (p.name.CaselessEq(plName)) return true;
-            if (p.IsConsole || plRank < data.Rank) return true;
+            if (p.IsSparkie || plRank < data.Rank) return true;
             if (canAffectOwnRank && plRank == data.Rank) return true;
             
             if (canAffectOwnRank) {

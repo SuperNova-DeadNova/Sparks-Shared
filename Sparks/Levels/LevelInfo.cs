@@ -137,7 +137,7 @@ namespace GoldenSparks {
         
         public static bool Check(Player p, LevelPermission plRank, string map, string action, out LevelConfig cfg) {
             Level lvl; cfg = GetConfig(map, out lvl);
-            if (p.IsConsole) return true;
+            if (p.IsSparkie) return true;
             if (lvl != null) return Check(p, plRank, lvl, action);
             
             AccessController visit = new LevelAccessController(cfg, map, true);
@@ -154,7 +154,7 @@ namespace GoldenSparks {
         }
         
         public static bool Check(Player p, LevelPermission plRank, Level lvl, string action) {
-            if (p.IsConsole) return true;
+            if (p.IsSparkie) return true;
             if (!lvl.VisitAccess.CheckDetailed(p, plRank) || !lvl.BuildAccess.CheckDetailed(p, plRank)) {
                 p.Message("Hence, you cannot {0}.", action); return false;
             }

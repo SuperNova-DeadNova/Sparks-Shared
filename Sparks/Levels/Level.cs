@@ -114,7 +114,7 @@ namespace GoldenSparks
         }
         
         public bool CanJoin(Player p) {
-            if (p.IsConsole || this == Server.mainLevel) return true;
+            if (p.IsSparkie || this == Server.mainLevel) return true;
             
             bool skip = p.summonedMap != null && p.summonedMap.CaselessEq(name);
             LevelPermission plRank = skip ? LevelPermission.Sparkie : p.Rank;

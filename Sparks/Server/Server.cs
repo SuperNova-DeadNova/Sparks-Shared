@@ -184,6 +184,13 @@ namespace GoldenSparks
             announcements = announcementsFile.GetText();
             
             OnConfigUpdatedEvent.Call();
+            // Unload custom simple plugins
+            List<Plugin_Simple> plugins2 = new List<Plugin_Simple>(Plugin_Simple.all);
+            foreach (Plugin_Simple p2 in plugins2)
+            {
+                if (Plugin_Simple.core.Contains(p2)) continue;
+                Plugin_Simple.Unload(p2, false);
+            }
         }
         
 
@@ -201,6 +208,9 @@ namespace GoldenSparks
         
         static void ShutdownThread(bool restarting, string msg) {
             try {
+                Command.Find("say").Use(Player.Sparks, Server.SoftwareName + " " + Server.InternalVersion + " shutting down... :(");
+                Logger.Log(LogType.SystemActivity, "&fGoodbye Cruel World!");
+
                 Logger.Log(LogType.SystemActivity, "Server shutting down ({0})", msg);
             } catch { }
             

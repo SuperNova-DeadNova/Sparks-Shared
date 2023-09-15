@@ -42,8 +42,8 @@ namespace GoldenSparks
         const int GEN_LIMIT = 30  * 1000 * 1000;
 
         public string Name;
-        [ConfigPerm("Permission", null, LevelPermission.Sparkie)]
-        public LevelPermission Permission = LevelPermission.Sparkie;
+        [ConfigPerm("Permission", null, LevelPermission.Owner)]
+        public LevelPermission Permission = LevelPermission.Owner;
 
         [ConfigColor("Color", null, "&f")]
         public string Color;

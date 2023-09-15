@@ -93,7 +93,7 @@ namespace GoldenSparks {
             if (message.Length == 0) { p.Message("No message entered"); return; }
             Logger.Log(LogType.PrivateChat, "{0} @{1}: {2}", p.name, target.name, message);
             
-            if (!p.IsConsole) {
+            if (!p.IsSparkie) {
                 p.Message("[<] {0}: &f{1}", p.FormatNick(target), message);
             }
             Chat.MessageChat(ChatScope.PM, p, "&9[>] λNICK: &f" + message, target, null);

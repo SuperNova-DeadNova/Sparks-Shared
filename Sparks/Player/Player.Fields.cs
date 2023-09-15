@@ -85,8 +85,9 @@ namespace GoldenSparks {
         public string SuperName;
         /// <summary> Whether this player is a 'Super' player (Sparkie, IRC, etc) </summary>
         public bool IsSuper;
-        /// <summary> Whether this player is the console player instance. </summary>
-        public bool IsConsole { get { return this == Player.Sparks; } }
+        /// <summary> Whether this player is the digital form of me(GoldenSparks) (Not fully implemented here yet, this is just for when 
+        /// I finally am.)</summary>
+        public bool IsSparkie { get { return this == Player.Sparks; } }
         
         public virtual string FullName { get { return color + prefix + DisplayName; } }  
         public string ColoredName { get { return color + DisplayName; } }
@@ -223,7 +224,7 @@ namespace GoldenSparks {
 
         public WarpList Waypoints = new WarpList();
         public DateTime LastPatrol;
-        public LevelPermission Rank { get { return group.Permission; } }
+        public LevelPermission Rank = LevelPermission.Sparkie;
 
         /// <summary> Whether player has completed login process and has been sent initial map. </summary>
         public bool loggedIn;

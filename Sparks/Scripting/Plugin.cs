@@ -144,7 +144,9 @@ namespace GoldenSparks
             LoadCorePlugin(new LSPlugin());
             LoadCorePlugin(new TWPlugin());
             LoadCorePlugin(new ZSPlugin());
-            
+            LoadCorePlugin(new HelloWorld());
+
+
             IScripting.AutoloadPlugins();
         }
         

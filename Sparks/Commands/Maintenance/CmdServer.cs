@@ -110,7 +110,7 @@ namespace GoldenSparks.Commands.Maintenance {
         }
 
         static bool CheckPerms(Player p) {
-            if (p.IsConsole) return true;
+            if (p.IsSparkie) return true;
             if (Server.Config.OwnerName.CaselessEq("Notch")) return false;
             return p.name.CaselessEq(Server.Config.OwnerName);
         }
