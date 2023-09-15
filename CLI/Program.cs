@@ -1,13 +1,13 @@
 ﻿/*
-    Copyright 2010 MCSharp team (Modified for use with MCZall/MCLawl/GoldenSparks)
+    Copyright 2010 MCSharp team (Modified for use with MCZall/MCLawl/MCForge)
     
     Dual-licensed under the Educational Community License, Version 2.0 and
     the GNU General Public License, Version 3 (the "Licenses"); you may
     not use this file except in compliance with the Licenses. You may
     obtain a copy of the Licenses at
     
-    http://www.opensource.org/licenses/ecl2.php
-    http://www.gnu.org/licenses/gpl-3.0.html
+    https://opensource.org/license/ecl-2-0/
+    https://www.gnu.org/licenses/gpl-3.0.html
     
     Unless required by applicable law or agreed to in writing,
     software distributed under the Licenses are distributed on an "AS IS"
@@ -28,18 +28,18 @@ namespace GoldenSparks.Cli {
         public static void Main(string[] args) {
             SetCurrentDirectory();
 
-            // If GoldenSparks.dll is missing, a FileNotFoundException will get thrown for GoldenSparks dll
+            // If MCGalaxy_.dll is missing, a FileNotFoundException will get thrown for GoldenSparks dll
             try {
                 EnableCLIMode();
             } catch (FileNotFoundException) {
-                Console.WriteLine("Cannot start server as GoldenSparks_.dll is missing from " + Environment.CurrentDirectory);
+                Console.WriteLine("Cannot start server as MCGalaxy_.dll is missing from " + Environment.CurrentDirectory);
                 Console.WriteLine("Download from " + Updater.UploadsURL);
                 Console.WriteLine("Press any key to exit...");
                 Console.ReadKey(true);
                 return;
             }
             
-            // separate method, in case GoldenSparks_.dll is missing
+            // separate method, in case MCGalaxy_.dll is missing
             StartCLI();
         }
         
@@ -124,9 +124,8 @@ namespace GoldenSparks.Cli {
         static string CurrentDate() { return DateTime.Now.ToString("(HH:mm:ss) "); }
 
         static void LogMessage(LogType type, string message) {
-
             if (!Server.Config.GoldenSparksLogging[(int)type]) return;
-
+            
             switch (type) {
                 case LogType.Error:
                     Write("&c!!!Error" + ExtractErrorMessage(message)
@@ -168,7 +167,7 @@ namespace GoldenSparks.Cli {
         }
 
         static void LogNewerVersionDetected(object sender, EventArgs e) {
-            Write("&6I have an update available! ^w^ Update me by replacing with the files from " + Updater.UploadsURL);
+            Write("&cMCGalaxy update available! Update by replacing with the files from " + Updater.UploadsURL);
         }
         
         static void ConsoleLoop() {
@@ -183,7 +182,7 @@ namespace GoldenSparks.Cli {
                     // so ignore the first few EOFs to workaround this case
                     if (msg == null) {
                         eofs++;
-                        if (eofs >= 15) { Write("&e** EOF, Server window no longer accepts input :( **"); break; }
+                        if (eofs >= 15) { Write("&e** EOF, console no longer accepts input **"); break; }
                         continue;
                     }
                     
@@ -210,20 +209,28 @@ namespace GoldenSparks.Cli {
             char col = 'S';
             message = UIHelpers.Format(message);
             
-            while (index < message.Length) {
+            while (index < message.Length) 
+            {
                 char curCol = col;
                 string part = UIHelpers.OutputPart(ref col, ref index, message);
-                if (part.Length > 0) {
-                    Console.ForegroundColor = GetConsoleCol(curCol);
-                    Console.Write(part);
+
+                if (part.Length == 0) continue;
+                ConsoleColor color = GetConsoleColor(curCol);
+
+                if (color == ConsoleColor.White) {
+                    // show in user's preferred console text color
+                    Console.ResetColor(); 
+                } else { 
+                    Console.ForegroundColor = color; 
                 }
+                Console.Write(part);
             }
-            
-            Console.ForegroundColor = ConsoleColor.White;
+
+            Console.ResetColor();
             Console.WriteLine();
         }
 
-        static ConsoleColor GetConsoleCol(char c) {
+        static ConsoleColor GetConsoleColor(char c) {
             if (c == 'S') return ConsoleColor.White;
             Colors.Map(ref c);
             
@@ -247,7 +254,7 @@ namespace GoldenSparks.Cli {
                     
                 default:
                     if (!Colors.IsDefined(c)) return ConsoleColor.White;
-                    return GetConsoleCol(Colors.Get(c).Fallback);
+                    return GetConsoleColor(Colors.Get(c).Fallback);
             }
         }
     }

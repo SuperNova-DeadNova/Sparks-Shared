@@ -1,11 +1,11 @@
 /*
-Copyright 2010 MCSharp team (Modified for use with MCZall/MCLawl/GoldenSparks)
+Copyright 2010 MCSharp team (Modified for use with MCZall/MCLawl/MCForge)
 Dual-licensed under the Educational Community License, Version 2.0 and
 the GNU General Public License, Version 3 (the "Licenses"); you may
 not use this file except in compliance with the Licenses. You may
 obtain a copy of the Licenses at
-http://www.opensource.org/licenses/ecl2.php
-http://www.gnu.org/licenses/gpl-3.0.html
+https://opensource.org/license/ecl-2-0/
+https://www.gnu.org/licenses/gpl-3.0.html
 Unless required by applicable law or agreed to in writing,
 software distributed under the Licenses are distributed on an "AS IS"
 BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
@@ -32,7 +32,7 @@ namespace GoldenSparks.Gui
             propsZG.SelectedObject = zsSettings;
         }
         
-        public void RunOnUI_Async(Action act) { BeginInvoke(act); }
+        public void RunOnUI_Async(UIAction act) { BeginInvoke(act); }
 
         void PropertyWindow_Load(object sender, EventArgs e) {
             // try to use same icon as main window
@@ -41,11 +41,10 @@ namespace GoldenSparks.Gui
             
             OnMapsChangedEvent.Register(HandleMapsChanged, Priority.Low);
             OnStateChangedEvent.Register(HandleStateChanged, Priority.Low);
-            GuiPerms.UpdateRankNames();
-            rank_cmbDefault.Items.AddRange(GuiPerms.RankNames);
-            rank_cmbOsMap.Items.AddRange(GuiPerms.RankNames);
-            blk_cmbMin.Items.AddRange(GuiPerms.RankNames);
-            cmd_cmbMin.Items.AddRange(GuiPerms.RankNames);
+            GuiPerms.UpdateRanks();
+
+            GuiPerms.SetRanks(blk_cmbMin);
+            GuiPerms.SetRanks(cmd_cmbMin);
 
             //Load server stuff
             LoadProperties();
@@ -71,8 +70,6 @@ namespace GoldenSparks.Gui
             LoadGeneralProps();
             LoadChatProps();
             LoadRelayProps();
-            LoadRelayProps1();
-            LoadRelayProps2();
             LoadSqlProps();
             LoadEcoProps();
             LoadMiscProps();
@@ -86,8 +83,6 @@ namespace GoldenSparks.Gui
                 ApplyGeneralProps();
                 ApplyChatProps();
                 ApplyRelayProps();
-                ApplyRelayProps1();
-                ApplyRelayProps2();
                 ApplySqlProps();
                 ApplyEcoProps();
                 ApplyMiscProps();
@@ -102,8 +97,6 @@ namespace GoldenSparks.Gui
                 Logger.Log(LogType.Warning, "SAVE FAILED! properties/server.properties");
             }
             SaveDiscordProps();
-            SaveDiscordProps1();
-            SaveDiscordProps2();
         }
 
         void btnSave_Click(object sender, EventArgs e) { SaveChanges(); Dispose(); }
@@ -115,34 +108,28 @@ namespace GoldenSparks.Gui
             SaveCommands();
             SaveBlocks();
             SaveGameProps();
-            
-            try { ZSGame.Config.Save(); }
-            catch { Logger.Log(LogType.Warning, "Error saving Zombie Survival settings!"); }
 
-            SrvProperties.Load(); // loads when saving?
-            CommandPerms.Load();
+            SrvProperties.ApplyChanges();
         }
 
         void btnDiscard_Click(object sender, EventArgs e) { Dispose(); }
 
         void GetHelp(string toHelp) {
-            SparksHelpPlayer p = new SparksHelpPlayer();
-
+            ConsoleHelpPlayer p = new ConsoleHelpPlayer();
             Command.Find("Help").Use(p, toHelp);
             Popup.Message(Colors.StripUsed(p.Messages), "Help for /" + toHelp);
         }
     }
-    sealed class SparksHelpPlayer : Player
-    {
+    
+    sealed class ConsoleHelpPlayer : Player {
         public string Messages = "";
-
-        public SparksHelpPlayer() : base("&e(&6S&ep&6a&er&6k&ei&6e&e)")
-        {
+            
+        public ConsoleHelpPlayer() : base("(console)") {
             group = Group.GoldenRank;
-            SuperName = "&6S&ep&6a&er&6k&ei&6e";
+            SuperName = "Sparkie";
         }
-
-        public override void Message(byte type, string message) {
+            
+        public override void Message(string message) {
             message = Chat.Format(message, this);
             Messages += message + "\r\n";
         }

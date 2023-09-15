@@ -1,13 +1,13 @@
 ﻿/*
-    Copyright 2015 GoldenSparks
+    Copyright 2015 MCGalaxy
 
     Dual-licensed under the Educational Community License, Version 2.0 and
     the GNU General Public License, Version 3 (the "Licenses"); you may
     not use this file except in compliance with the Licenses. You may
     obtain a copy of the Licenses at
     
-    http://www.osedu.org/licenses/ECL-2.0
-    http://www.gnu.org/licenses/gpl-3.0.html
+    https://opensource.org/license/ecl-2-0/
+    https://www.gnu.org/licenses/gpl-3.0.html
     
     Unless required by applicable law or agreed to in writing,
     software distributed under the Licenses are distributed on an "AS IS"
@@ -51,7 +51,7 @@ namespace GoldenSparks.Commands.Fun {
             }
         }
 
-        protected void HandleGo(Player p, RoundsGame game) {
+        protected virtual void HandleGo(Player p, RoundsGame game) {
             if (!game.Running) {
                 p.Message("{0} is not running", game.GameName);
             } else {
@@ -66,7 +66,7 @@ namespace GoldenSparks.Commands.Fun {
             game.Start(p, map, int.MaxValue);
         }
         
-        protected void HandleEnd(Player p, RoundsGame game) {
+        protected virtual void HandleEnd(Player p, RoundsGame game) {
             if (game.RoundInProgress) {
                 game.EndRound();
             } else {
@@ -74,7 +74,7 @@ namespace GoldenSparks.Commands.Fun {
             }
         }
         
-        protected void HandleStop(Player p, RoundsGame game) {
+        protected virtual void HandleStop(Player p, RoundsGame game) {
             if (!game.Running) {
                 p.Message("{0} is not running", game.GameName);
             } else {
@@ -83,7 +83,7 @@ namespace GoldenSparks.Commands.Fun {
             }
         }
 
-        protected void HandleStatus(Player p, RoundsGame game) {
+        protected virtual void HandleStatus(Player p, RoundsGame game) {
             if (!game.Running) {
                 p.Message("{0} is not running", game.GameName);
             } else {

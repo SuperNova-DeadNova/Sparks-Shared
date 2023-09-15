@@ -1,11 +1,11 @@
 ﻿/*
-Copyright 2010 MCSharp team (Modified for use with MCZall/MCLawl/GoldenSparks)
+Copyright 2010 MCSharp team (Modified for use with MCZall/MCLawl/MCForge)
 Dual-licensed under the Educational Community License, Version 2.0 and
 the GNU General Public License, Version 3 (the "Licenses"); you may
 not use this file except in compliance with the Licenses. You may
 obtain a copy of the Licenses at
-http://www.opensource.org/licenses/ecl2.php
-http://www.gnu.org/licenses/gpl-3.0.html
+https://opensource.org/license/ecl-2-0/
+https://www.gnu.org/licenses/gpl-3.0.html
 Unless required by applicable law or agreed to in writing,
 software distributed under the Licenses are distributed on an "AS IS"
 BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
@@ -24,20 +24,32 @@ namespace GoldenSparks.Gui {
         bool rankSupressEvents = false;
         
         void LoadRankProps() {
-            GuiPerms.SetDefaultIndex(rank_cmbDefault, Group.DefaultRank.Permission);
-            GuiPerms.SetDefaultIndex(rank_cmbOsMap, Server.Config.OSPerbuildDefault);
-            rank_cbTPHigher.Checked = Server.Config.HigherRankTP;
-            rank_cbSilentAdmins.Checked = Server.Config.AdminsJoinSilently;
-            rank_cbEmpty.Checked = Server.Config.ListEmptyRanks;
+            LoadDefaultRank();
+            GuiPerms.SetRanks(rank_cmbOsMap);
+            GuiPerms.SetSelectedRank(rank_cmbOsMap, Server.Config.OSPerbuildDefault);
+
+            rank_cbTPHigher.Checked      = Server.Config.HigherRankTP;
+            rank_cbSilentAdmins.Checked  = Server.Config.AdminsJoinSilently;
+            rank_cbEmpty.Checked         = Server.Config.ListEmptyRanks;
+        }
+
+        void LoadDefaultRank() {
+            rank_cmbDefault.Items.Clear();
+            foreach (Group group in Group.GroupList) 
+            {
+                rank_cmbDefault.Items.Add(group.Name);
+            }
+
+            rank_cmbDefault.SelectedItem = Server.Config.DefaultRankName;
+            if (rank_cmbDefault.SelectedItem == null) rank_cmbDefault.SelectedIndex = 1; // guest rank (usually) TODO rethink
         }
         
         void ApplyRankProps() {
-            Server.Config.DefaultRankName = rank_cmbDefault.SelectedItem.ToString();
-            Server.Config.OSPerbuildDefault = GuiPerms.GetPermission(rank_cmbOsMap, LevelPermission.Sparkie);
-
-            Server.Config.HigherRankTP = rank_cbTPHigher.Checked;
+            Server.Config.DefaultRankName    = rank_cmbDefault.SelectedItem.ToString();
+            Server.Config.OSPerbuildDefault  = GuiPerms.GetSelectedRank(rank_cmbOsMap, LevelPermission.Sparkie);
+            Server.Config.HigherRankTP       = rank_cbTPHigher.Checked;
             Server.Config.AdminsJoinSilently = rank_cbSilentAdmins.Checked;
-            Server.Config.ListEmptyRanks = rank_cbEmpty.Checked;
+            Server.Config.ListEmptyRanks     = rank_cbEmpty.Checked;
         }
         
         
@@ -48,7 +60,8 @@ namespace GoldenSparks.Gui {
             copiedGroups.Clear();
             curGroup = null;
             
-            foreach (Group grp in Group.GroupList) {
+            foreach (Group grp in Group.GroupList) 
+            {
                 copiedGroups.Add(grp.CopyConfig());
                 rank_list.Items.Add(grp.Name + " = " + (int)grp.Permission);
             }
@@ -70,7 +83,7 @@ namespace GoldenSparks.Gui {
         void rank_list_SelectedIndexChanged(object sender, EventArgs e) {
             if (rankSupressEvents) return;
             curGroup = null;
-            if (rank_list.SelectedIndex == -1) return;
+            if (rank_list.SelectedIndex == 0) return;
             
             Group grp = copiedGroups[rank_list.SelectedIndex];
             curGroup = grp;
@@ -152,8 +165,8 @@ namespace GoldenSparks.Gui {
         void rank_btnAdd_Click(object sender, EventArgs e) {
             // Find first free rank permission
             int perm = 5;
-            for (int i = (int)LevelPermission.Guest; i <= (int)LevelPermission.Sparkie; i++) {
-
+            for (int i = (int)LevelPermission.Guest; i <= (int)LevelPermission.Null; i++) 
+            {
                 if (PermissionFree(i)) { perm = i; break; }
             }
             

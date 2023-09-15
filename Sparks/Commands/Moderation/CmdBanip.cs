@@ -1,13 +1,13 @@
 /*
-    Copyright 2010 MCSharp team (Modified for use with MCZall/MCLawl/GoldenSparks)
+    Copyright 2010 MCSharp team (Modified for use with MCZall/MCLawl/MCForge)
     
     Dual-licensed under the Educational Community License, Version 2.0 and
     the GNU General Public License, Version 3 (the "Licenses"); you may
     not use this file except in compliance with the Licenses. You may
     obtain a copy of the Licenses at
     
-    http://www.opensource.org/licenses/ecl2.php
-    http://www.gnu.org/licenses/gpl-3.0.html
+    https://opensource.org/license/ecl-2-0/
+    https://www.gnu.org/licenses/gpl-3.0.html
     
     Unless required by applicable law or agreed to in writing,
     software distributed under the Licenses are distributed on an "AS IS"
@@ -54,12 +54,14 @@ namespace GoldenSparks.Commands.Moderation {
         }
         
         static bool CheckIP(Player p, CommandData data, string ip) {
-            if (p.IsSparkie) return true;
-
+            if (p.IsConsole) return true;
             List<string> accounts = PlayerInfo.FindAccounts(ip);
-            if (accounts == null || accounts.Count == 0) return true;
             
-            foreach (string name in accounts) {
+            if (accounts == null || accounts.Count == 0) return true;
+            if (!Server.Config.ProtectStaffIPs) return true;
+            
+            foreach (string name in accounts) 
+            {
                 Group grp = PlayerInfo.GetGroup(name);
                 if (grp.Permission < data.Rank) continue;
                 

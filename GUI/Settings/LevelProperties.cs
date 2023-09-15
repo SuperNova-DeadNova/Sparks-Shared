@@ -6,8 +6,8 @@
     not use this file except in compliance with the Licenses. You may
     obtain a copy of the Licenses at
     
-    http://www.opensource.org/licenses/ecl2.php
-    http://www.gnu.org/licenses/gpl-3.0.html
+    https://opensource.org/license/ecl-2-0/
+    https://www.gnu.org/licenses/gpl-3.0.html
     
     Unless required by applicable law or agreed to in writing,
     software distributed under the Licenses are distributed on an "AS IS"
@@ -83,7 +83,7 @@ namespace GoldenSparks.Gui {
         [Description("If physics is active, whether spreading liquids randomly pick a direction to flow in." +
                      "Otherwise, spreads in all directions.")]
         [Category("Physics")]
-        [DisplayName("Sparks flow")]
+        [DisplayName("Random flow")]
         public bool RandomFlow { get { return cfg.RandomFlow; } set { DoMap(LevelOptions.Flow, value); } }
         
         [Description("If physics is active, water flows from the map edges into the world.")]
@@ -147,7 +147,6 @@ namespace GoldenSparks.Gui {
                 string args = raw == null ? "" : raw.ToString();
                 string cmdArgs = args.Length == 0 ? lvl.name : lvl.name + " " + args;
                 Command.Find(cmd).Use(Player.Sparks, cmdArgs);
-
             } catch (Exception ex) {
                 Logger.LogError(ex);
             }

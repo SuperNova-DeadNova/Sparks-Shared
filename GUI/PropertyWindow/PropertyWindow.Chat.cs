@@ -1,11 +1,11 @@
 ﻿/*
-Copyright 2010 MCSharp team (Modified for use with MCZall/MCLawl/GoldenSparks)
+Copyright 2010 MCSharp team (Modified for use with MCZall/MCLawl/MCForge)
 Dual-licensed under the Educational Community License, Version 2.0 and
 the GNU General Public License, Version 3 (the "Licenses"); you may
 not use this file except in compliance with the Licenses. You may
 obtain a copy of the Licenses at
-http://www.opensource.org/licenses/ecl2.php
-http://www.gnu.org/licenses/gpl-3.0.html
+https://opensource.org/license/ecl-2-0/
+https://www.gnu.org/licenses/gpl-3.0.html
 Unless required by applicable law or agreed to in writing,
 software distributed under the Licenses are distributed on an "AS IS"
 BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
@@ -27,21 +27,22 @@ namespace GoldenSparks.Gui {
             chat_ParseColor(Server.Config.HelpSyntaxColor, chat_btnSyntax);
             chat_ParseColor(Server.Config.HelpDescriptionColor, chat_btnDesc);
             chat_ParseColor(Server.Config.WarningErrorColor, chat_btnWarn);
-
+            
             chat_txtConsole.Text = Server.Config.CoreState;
-
             chat_chkFilter.Checked = Server.Config.ProfanityFiltering;
             chat_cbTabRank.Checked = Server.Config.TablistRankSorted;
             chat_cbTabLevel.Checked = !Server.Config.TablistGlobal;
             chat_cbTabBots.Checked = Server.Config.TablistBots;
             
             chat_txtShutdown.Text = Server.Config.DefaultShutdownMessage;
-            chat_chkCheap.Checked = Server.Config.ShowInvulnerableMessage;
+            chat_chkCheap.Checked = Server.Config.ShowInvincibleMessage;
             chat_txtCheap.Enabled = chat_chkCheap.Checked;
-            chat_txtCheap.Text = Server.Config.InvulnerableMessage;
+            chat_txtCheap.Text = Server.Config.InvincibleMessage;
             chat_txtBan.Text = Server.Config.DefaultBanMessage;
             chat_txtPromote.Text = Server.Config.DefaultPromoteMessage;
             chat_txtDemote.Text = Server.Config.DefaultDemoteMessage;
+            chat_txtLogin.Text = Server.Config.DefaultLoginMessage;
+            chat_txtLogout.Text = Server.Config.DefaultLogoutMessage;
         }
         
         void ApplyChatProps() {
@@ -50,7 +51,7 @@ namespace GoldenSparks.Gui {
             Server.Config.HelpSyntaxColor = Colors.Parse(chat_btnSyntax.Text);
             Server.Config.HelpDescriptionColor = Colors.Parse(chat_btnDesc.Text);
             Server.Config.WarningErrorColor = Colors.Parse(chat_btnWarn.Text);
-
+            
             Server.Config.CoreState = chat_txtConsole.Text;
             Server.Config.ProfanityFiltering = chat_chkFilter.Checked;
             Server.Config.TablistRankSorted = chat_cbTabRank.Checked;
@@ -58,11 +59,13 @@ namespace GoldenSparks.Gui {
             Server.Config.TablistBots = chat_cbTabBots.Checked;
             
             Server.Config.DefaultShutdownMessage = chat_txtShutdown.Text;
-            Server.Config.ShowInvulnerableMessage = chat_chkCheap.Checked;
-            Server.Config.InvulnerableMessage = chat_txtCheap.Text;
+            Server.Config.ShowInvincibleMessage = chat_chkCheap.Checked;
+            Server.Config.InvincibleMessage = chat_txtCheap.Text;
             Server.Config.DefaultBanMessage = chat_txtBan.Text;
             Server.Config.DefaultPromoteMessage = chat_txtPromote.Text;
             Server.Config.DefaultDemoteMessage = chat_txtDemote.Text;
+            Server.Config.DefaultLoginMessage = chat_txtLogin.Text;
+            Server.Config.DefaultLogoutMessage = chat_txtLogout.Text;
         }
         
 

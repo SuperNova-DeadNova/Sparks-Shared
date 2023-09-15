@@ -1,13 +1,13 @@
 /*
-    Copyright 2010 MCSharp team (Modified for use with MCZall/MCLawl/Sparkie)
+    Copyright 2010 MCSharp team (Modified for use with MCZall/MCLawl/MCForge)
     
     Dual-licensed under the Educational Community License, Version 2.0 and
     the GNU General Public License, Version 3 (the "Licenses"); you may
     not use this file except in compliance with the Licenses. You may
     obtain a copy of the Licenses at
     
-    http://www.opensource.org/licenses/ecl2.php
-    http://www.gnu.org/licenses/gpl-3.0.html
+    https://opensource.org/license/ecl-2-0/
+    https://www.gnu.org/licenses/gpl-3.0.html
     
     Unless required by applicable law or agreed to in writing,
     software distributed under the Licenses are distributed on an "AS IS"
@@ -149,7 +149,7 @@ namespace GoldenSparks.Gui
             this.pl_btnMessage = new System.Windows.Forms.Button();
             this.pl_gbActions = new System.Windows.Forms.GroupBox();
             this.pl_btnKill = new System.Windows.Forms.Button();
-            this.pl_txtUndo = new System.Windows.Forms.TextBox();
+            this.pl_numUndo = new GoldenSparks.Gui.TimespanUpDown();
             this.pl_btnWarn = new System.Windows.Forms.Button();
             this.pl_btnRules = new System.Windows.Forms.Button();
             this.pl_btnKick = new System.Windows.Forms.Button();
@@ -764,7 +764,7 @@ namespace GoldenSparks.Gui
             this.main_txtUrl.ReadOnly = true;
             this.main_txtUrl.Size = new System.Drawing.Size(498, 21);
             this.main_txtUrl.TabIndex = 25;
-            this.main_txtUrl.Text = "Finding classicube.net url..";
+            this.main_txtUrl.Text = "Starting server..";
             this.main_txtUrl.DoubleClick += new System.EventHandler(this.main_TxtUrl_DoubleClick);
             // 
             // main_colPlName
@@ -1166,7 +1166,7 @@ namespace GoldenSparks.Gui
             // pl_gbActions
             // 
             this.pl_gbActions.Controls.Add(this.pl_btnKill);
-            this.pl_gbActions.Controls.Add(this.pl_txtUndo);
+            this.pl_gbActions.Controls.Add(this.pl_numUndo);
             this.pl_gbActions.Controls.Add(this.pl_btnWarn);
             this.pl_gbActions.Controls.Add(this.pl_btnRules);
             this.pl_gbActions.Controls.Add(this.pl_btnKick);
@@ -1192,14 +1192,17 @@ namespace GoldenSparks.Gui
             this.pl_btnKill.UseVisualStyleBackColor = true;
             this.pl_btnKill.Click += new System.EventHandler(this.pl_BtnKill_Click);
             // 
-            // pl_txtUndo
+            // pl_numUndo
             // 
-            this.pl_txtUndo.BackColor = System.Drawing.SystemColors.Window;
-            this.pl_txtUndo.Location = new System.Drawing.Point(122, 150);
-            this.pl_txtUndo.Name = "pl_txtUndo";
-            this.pl_txtUndo.Size = new System.Drawing.Size(98, 21);
-            this.pl_txtUndo.TabIndex = 42;
-            this.pl_txtUndo.KeyDown += new System.Windows.Forms.KeyEventHandler(this.pl_txtUndo_KeyDown);
+            this.pl_numUndo.BackColor = System.Drawing.SystemColors.Window;
+            this.pl_numUndo.Location = new System.Drawing.Point(122, 149);
+            this.pl_numUndo.Name = "pl_numUndo";
+            this.pl_numUndo.Size = new System.Drawing.Size(98, 21);
+            this.pl_numUndo.TabIndex = 42;
+            this.pl_numUndo.Seconds = ((long)(1800));
+            this.pl_numUndo.Text = "30m";
+            this.pl_numUndo.Value = System.TimeSpan.Parse("00:30:00");
+            this.pl_numUndo.KeyDown += new System.Windows.Forms.KeyEventHandler(this.pl_numUndo_KeyDown);
             // 
             // pl_btnWarn
             // 
@@ -1429,7 +1432,7 @@ namespace GoldenSparks.Gui
         private ToolStripMenuItem tsPlayer_promote;
         private ToolStripMenuItem tsPlayer_demote;
         private TabPage tp_Players;
-        internal RichTextBox logs_txtGeneral;
+        private RichTextBox logs_txtGeneral;
         private DateTimePicker logs_dateGeneral;
         private Button pl_btnBanIP;
         private Button pl_btnBan;
@@ -1441,7 +1444,7 @@ namespace GoldenSparks.Gui
         private TextBox pl_txtSendCommand;
         private Button pl_btnSendCommand;
         private Button pl_btnKill;
-        private TextBox pl_txtUndo;
+        private GoldenSparks.Gui.TimespanUpDown pl_numUndo;
         private Button pl_btnUndo;
         private Button pl_btnMute;
         private Button pl_btnRules;

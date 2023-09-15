@@ -6,8 +6,8 @@
     not use this file except in compliance with the Licenses. You may
     obtain a copy of the Licenses at
     
-    http://www.opensource.org/licenses/ecl2.php
-    http://www.gnu.org/licenses/gpl-3.0.html
+    https://opensource.org/license/ecl-2-0/
+    https://www.gnu.org/licenses/gpl-3.0.html
     
     Unless required by applicable law or agreed to in writing,
     software distributed under the Licenses are distributed on an "AS IS"
@@ -17,12 +17,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Text.RegularExpressions;
-using GoldenSparks.Events.PlayerEvents;
-using GoldenSparks.Events.ServerEvents;
-using GoldenSparks.Modules.Relay;
-using GoldenSparks.Network;
 using Sharkbite.Irc;
 
 namespace GoldenSparks.Modules.Relay.IRC 
@@ -35,20 +29,22 @@ namespace GoldenSparks.Modules.Relay.IRC
         
         public void Clear() { userMap.Clear(); }
         
-        public void OnLeftChannel(UserInfo user, string channel) {
+        public void OnLeftChannel(string userNick, string channel) {
             List<string> chanNicks = GetNicks(channel);
-            RemoveNick(user.Nick, chanNicks);
+            RemoveNick(userNick, chanNicks);
         }
 
-        public void OnLeft(UserInfo user) {
-            foreach (var chans in userMap) {
-                RemoveNick(user.Nick, chans.Value);
+        public void OnLeft(string userNick) {
+            foreach (var chans in userMap) 
+            {
+                RemoveNick(userNick, chans.Value);
             }
         }
         
-        public void OnChangedNick(UserInfo user, string newNick) {
-            foreach (var chans in userMap) {
-                int index = GetNickIndex(user.Nick, chans.Value);
+        public void OnChangedNick(string userNick, string newNick) {
+            foreach (var chans in userMap)
+            {
+                int index = GetNickIndex(userNick, chans.Value);
                 if (index >= 0) {
                     string prefix = GetPrefix(chans.Value[index]);
                     chans.Value[index] = prefix + newNick;
@@ -67,7 +63,8 @@ namespace GoldenSparks.Modules.Relay.IRC
         
         
         List<string> GetNicks(string channel) {
-            foreach (var chan in userMap) {
+            foreach (var chan in userMap) 
+            {
                 if (chan.Key.CaselessEq(channel)) return chan.Value;
             }
             
@@ -78,7 +75,8 @@ namespace GoldenSparks.Modules.Relay.IRC
         
         void UpdateNick(string n, List<string> chanNicks) {
             string unprefixNick = Unprefix(n);
-            for (int i = 0; i < chanNicks.Count; i++ ) {
+            for (int i = 0; i < chanNicks.Count; i++ ) 
+            {
                 if (unprefixNick == Unprefix(chanNicks[i])) {
                     chanNicks[i] = n; return;
                 }
@@ -95,7 +93,8 @@ namespace GoldenSparks.Modules.Relay.IRC
             if (chanNicks == null) return -1;
             string unprefixNick = Unprefix(n);
             
-            for (int i = 0; i < chanNicks.Count; i++ ) {
+            for (int i = 0; i < chanNicks.Count; i++ ) 
+            {
                 if (unprefixNick == Unprefix(chanNicks[i]))
                     return i;
             }
@@ -112,7 +111,8 @@ namespace GoldenSparks.Modules.Relay.IRC
         
         int GetPrefixLength(string nick) {
             int prefixChars = 0;
-            for (int i = 0; i < nick.Length; i++) {
+            for (int i = 0; i < nick.Length; i++) 
+            {
                 if (!IsNickChar(nick[i]))
                     prefixChars++;
                 else
@@ -139,7 +139,7 @@ namespace GoldenSparks.Modules.Relay.IRC
             
             if (verify == IRCControllerVerify.HalfOp) {
                 string prefix = GetPrefix(chanNicks[index]);
-                if (prefix.Length == 0 || prefix == "+") {
+                if (prefix.Length == 0 || prefix == "+") { // + prefix is 'voiced user'
                     error = "You must be at least a half-op on the channel to use commands from IRC."; return false;
                 }
                 return true;

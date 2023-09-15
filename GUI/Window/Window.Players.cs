@@ -1,13 +1,13 @@
 ﻿/*    
-    Copyright 2010 MCSharp team (Modified for use with MCZall/MCLawl/GoldenSparks)
+    Copyright 2010 MCSharp team (Modified for use with MCZall/MCLawl/MCForge)
     
     Dual-licensed under the    Educational Community License, Version 2.0 and
     the GNU General Public License, Version 3 (the "Licenses"); you may
     not use this file except in compliance with the Licenses. You may
     obtain a copy of the Licenses at
     
-    http://www.opensource.org/licenses/ecl2.php
-    http://www.gnu.org/licenses/gpl-3.0.html
+    https://opensource.org/license/ecl-2-0/
+    https://www.gnu.org/licenses/gpl-3.0.html
     
     Unless required by applicable law or agreed to in writing,
     software distributed under the Licenses are distributed on an "AS IS"
@@ -19,19 +19,23 @@ using System;
 using System.Windows.Forms;
 using GoldenSparks.UI;
 
-namespace GoldenSparks.Gui {
-    public partial class Window : Form {
+namespace GoldenSparks.Gui 
+{
+    public partial class Window : Form 
+    {
         PlayerProperties playerProps;
         
         void NoPlayerSelected() { Popup.Warning("No player selected"); }
 
         void pl_BtnUndo_Click(object sender, EventArgs e) {
             if (curPlayer == null) { NoPlayerSelected(); return; }
-            string time = pl_txtUndo.Text.Trim();
-            if (time.Length == 0) { Players_AppendStatus("Amount of time to undo required"); return; }
+            TimeSpan interval = pl_numUndo.Value;
+            if (interval.TotalSeconds == 0) { Players_AppendStatus("Amount of time to undo required"); return; }
 
-            UIHelpers.HandleCommand("UndoPlayer " + curPlayer.name + " " + time);
-            Players_AppendStatus("Undid " + curPlayer.truename + " for " + time + " seconds");
+            // TODO ModerationActions instead of HandleCommand
+            string duration = pl_numUndo.Value.Shorten(true, false);
+            UIHelpers.HandleCommand("UndoPlayer " + curPlayer.name + " " + duration);
+            Players_AppendStatus("Undid " + curPlayer.truename + " for " + duration);
         }
 
         void pl_BtnMessage_Click(object sender, EventArgs e) {
@@ -39,8 +43,8 @@ namespace GoldenSparks.Gui {
 
             string text = pl_txtMessage.Text.Trim();
             if (text.Length == 0) { Players_AppendStatus("No message to send"); return; }
+            
             ChatModes.MessageDirect(Player.Sparks, curPlayer, pl_txtMessage.Text);
-
             Players_AppendStatus("Sent player message: " + pl_txtMessage.Text);
             pl_txtMessage.Text = "";
         }
@@ -56,8 +60,7 @@ namespace GoldenSparks.Gui {
             string cmdName = args[0], cmdArgs = args.Length > 1 ? args[1] : "";
             
             CommandData data = default(CommandData);
-            data.Rank = LevelPermission.Sparkie;
-
+            data.Rank    = LevelPermission.Sparkie;
             data.Context = CommandContext.SendCmd;
             curPlayer.HandleCommand(cmdName, cmdArgs, data);
                 
@@ -69,8 +72,22 @@ namespace GoldenSparks.Gui {
             pl_txtSendCommand.Text = "";
         }
 
-        void pl_BtnMute_Click(object sender, EventArgs e)  { DoCmd("mute", "Muted @p"); }
-        void pl_BtnFreeze_Click(object sender, EventArgs e){ DoCmd("freeze", "Froze @p"); }
+        void pl_BtnMute_Click(object sender, EventArgs e)  {
+            if (curPlayer != null && !curPlayer.muted) {
+                DoCmd("mute", "Muted @p"); 
+            } else {
+                DoCmd("unmute", "Unmuted @p");
+            }
+        }
+        
+        void pl_BtnFreeze_Click(object sender, EventArgs e) {
+            if (curPlayer != null && !curPlayer.frozen) {
+                DoCmd("freeze", "Froze @p", "10m"); 
+            } else {
+                DoCmd("freeze", "Unfroze @p");
+            }
+        }
+        
         void pl_BtnWarn_Click(object sender, EventArgs e)  { DoCmd("warn", "Warned @p"); }
         void pl_BtnKick_Click(object sender, EventArgs e)  { DoCmd("kick", "Kicked @p"); }
         void pl_BtnBan_Click(object sender, EventArgs e)   { DoCmd("ban", "Banned @p"); }
@@ -78,9 +95,11 @@ namespace GoldenSparks.Gui {
         void pl_BtnKill_Click(object sender, EventArgs e)  { DoCmd("kill", "Killed @p"); }
         void pl_BtnRules_Click(object sender, EventArgs e) { DoCmd("Rules", "Sent rules to @p"); }
         
-        void DoCmd(string cmdName, string action) {
+        void DoCmd(string cmdName, string action, string suffix = null) {
             if (curPlayer == null) { NoPlayerSelected(); return; }
-            UIHelpers.HandleCommand(cmdName + " " + curPlayer.name);
+            
+            string cmd = (cmdName + " " + curPlayer.name + " " + suffix).Trim();
+            UIHelpers.HandleCommand(cmd);
             
             Players_AppendStatus(action.Replace("@p", curPlayer.truename));
             Players_UpdateButtons();
@@ -101,7 +120,7 @@ namespace GoldenSparks.Gui {
         void pl_txtSendCommand_KeyDown(object sender, KeyEventArgs e) {
             if (e.KeyCode == Keys.Enter) pl_BtnSendCommand_Click(sender, e);
         }
-        void pl_txtUndo_KeyDown(object sender, KeyEventArgs e) {
+        void pl_numUndo_KeyDown(object sender, KeyEventArgs e) {
             if (e.KeyCode == Keys.Enter) pl_BtnUndo_Click(sender, e);
         }
         void pl_txtMessage_KeyDown(object sender, KeyEventArgs e) {

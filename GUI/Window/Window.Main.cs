@@ -1,13 +1,13 @@
 ﻿/*    
-    Copyright 2010 MCSharp team (Modified for use with MCZall/MCLawl/GoldenSparks)
+    Copyright 2010 MCSharp team (Modified for use with MCZall/MCLawl/MCForge)
     
     Dual-licensed under the    Educational Community License, Version 2.0 and
     the GNU General Public License, Version 3 (the "Licenses"); you may
     not use this file except in compliance with the Licenses. You may
     obtain a copy of the Licenses at
     
-    http://www.opensource.org/licenses/ecl2.php
-    http://www.gnu.org/licenses/gpl-3.0.html
+    https://opensource.org/license/ecl-2-0/
+    https://www.gnu.org/licenses/gpl-3.0.html
     
     Unless required by applicable law or agreed to in writing,
     software distributed under the Licenses are distributed on an "AS IS"
@@ -109,15 +109,22 @@ namespace GoldenSparks.Gui {
             main_txtInput.SelectionLength = 0;
             main_txtInput.SelectionStart = main_txtInput.Text.Length;
         }
+
+        void AddInputLog(string text) {
+            // Simplify navigating through input history by not logging duplicate entries
+            if (inputLog.Count > 0 && text == inputLog[0]) return;
+
+            inputLog.Insert(0, text);
+            if (inputLog.Count > 20)
+                inputLog.RemoveAt(20);
+        }
         
         void InputText() {
             string text = main_txtInput.Text;
             if (text.Length == 0) return;
-            
-            inputLog.Insert(0, text);
-            if (inputLog.Count > 20) 
-                inputLog.RemoveAt(20);
-            
+            AddInputLog(text);
+
+
             if (text == "/") {
                 UIHelpers.RepeatCommand();
             } else if (text[0] == '/' && text.Length > 1 && text[1] == '/') {

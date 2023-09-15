@@ -1,13 +1,13 @@
 ﻿/*
-    Copyright 2015 GoldenSparks
+    Copyright 2015 MCGalaxy
     
     Dual-licensed under the Educational Community License, Version 2.0 and
     the GNU General Public License, Version 3 (the "Licenses"); you may
     not use this file except in compliance with the Licenses. You may
     obtain a copy of the Licenses at
     
-    http://www.opensource.org/licenses/ecl2.php
-    http://www.gnu.org/licenses/gpl-3.0.html
+    https://opensource.org/license/ecl-2-0/
+    https://www.gnu.org/licenses/gpl-3.0.html
     
     Unless required by applicable law or agreed to in writing,
     software distributed under the Licenses are distributed on an "AS IS"
@@ -19,16 +19,19 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace GoldenSparks.Util {
+namespace GoldenSparks.Util 
+{
+    public delegate void TextFileChanged();
     
-    /// <summary> Represents a text file and associated data for it. </summary>
-    public sealed class TextFile {
+    /// <summary> Represents a text file and associated data for it </summary>
+    public sealed class TextFile 
+    {
         public readonly string Filename;
         public readonly string[] DefaultText;        
-        public Action OnTextChanged;
+        public TextFileChanged OnTextChanged;
         
         public TextFile(string filename, params string[] defaultText) {
-            Filename = filename;
+            Filename    = filename;
             DefaultText = defaultText;
         }
         

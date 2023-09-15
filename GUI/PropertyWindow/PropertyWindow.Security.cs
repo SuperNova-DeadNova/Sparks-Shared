@@ -1,11 +1,11 @@
 ﻿/*
-Copyright 2010 MCSharp team (Modified for use with MCZall/MCLawl/GoldenSparks)
+Copyright 2010 MCSharp team (Modified for use with MCZall/MCLawl/MCForge)
 Dual-licensed under the Educational Community License, Version 2.0 and
 the GNU General Public License, Version 3 (the "Licenses"); you may
 not use this file except in compliance with the Licenses. You may
 obtain a copy of the Licenses at
-http://www.opensource.org/licenses/ecl2.php
-http://www.gnu.org/licenses/gpl-3.0.html
+https://opensource.org/license/ecl-2-0/
+https://www.gnu.org/licenses/gpl-3.0.html
 Unless required by applicable law or agreed to in writing,
 software distributed under the Licenses are distributed on an "AS IS"
 BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
@@ -22,9 +22,9 @@ namespace GoldenSparks.Gui {
         void LoadSecurityProps() {
             sec_cbLogNotes.Checked = Server.Config.LogNotes;            
             sec_cbVerifyAdmins.Checked = Server.Config.verifyadmins;
-            sec_cbWhitelist.Checked = Server.Config.WhitelistedOnly;            
-            sec_cmbVerifyRank.Items.AddRange(GuiPerms.RankNames);
-            GuiPerms.SetDefaultIndex(sec_cmbVerifyRank, Server.Config.VerifyAdminsRank);
+            sec_cbWhitelist.Checked = Server.Config.WhitelistedOnly;
+            GuiPerms.SetRanks(sec_cmbVerifyRank);
+            GuiPerms.SetSelectedRank(sec_cmbVerifyRank, Server.Config.VerifyAdminsRank);
             sec_cmbVerifyRank.Enabled = Server.Config.verifyadmins;
             
             sec_cbChatAuto.Checked = Server.Config.ChatSpamCheck;
@@ -54,7 +54,7 @@ namespace GoldenSparks.Gui {
         void ApplySecurityProps() {
             Server.Config.LogNotes = sec_cbLogNotes.Checked;
             Server.Config.verifyadmins = sec_cbVerifyAdmins.Checked;
-            Server.Config.VerifyAdminsRank = GuiPerms.GetPermission(sec_cmbVerifyRank, LevelPermission.Operator);
+            Server.Config.VerifyAdminsRank = GuiPerms.GetSelectedRank(sec_cmbVerifyRank, LevelPermission.Operator);
             Server.Config.WhitelistedOnly  = sec_cbWhitelist.Checked;
 
             Server.Config.ChatSpamCheck = sec_cbChatAuto.Checked;

@@ -1,13 +1,13 @@
 ﻿/*
-    Copyright 2015 GoldenSparks
+    Copyright 2015 MCGalaxy
         
     Dual-licensed under the Educational Community License, Version 2.0 and
     the GNU General Public License, Version 3 (the "Licenses"); you may
     not use this file except in compliance with the Licenses. You may
     obtain a copy of the Licenses at
     
-    http://www.opensource.org/licenses/ecl2.php
-    http://www.gnu.org/licenses/gpl-3.0.html
+    https://opensource.org/license/ecl-2-0/
+    https://www.gnu.org/licenses/gpl-3.0.html
     
     Unless required by applicable law or agreed to in writing,
     software distributed under the Licenses are distributed on an "AS IS"
@@ -25,17 +25,17 @@ using GoldenSparks.Events.PlayerEvents;
 using GoldenSparks.Events.ServerEvents;
 using GoldenSparks.Network;
 
-namespace GoldenSparks.Games {
-
+namespace GoldenSparks.Games 
+{
     /// <summary> Stores map-specific game configuration state. </summary>
-    public abstract class RoundsGameMapConfig {
-
-        public void LoadFrom(ConfigElement[] cfg, string propsDir, string map) {
+    public abstract class RoundsGameMapConfig 
+    {    
+        protected void LoadFrom(ConfigElement[] cfg, string propsDir, string map) {
             string path = propsDir + map + ".properties";
             ConfigElement.ParseFile(cfg, path, this);
         }
-
-        public void SaveTo(ConfigElement[] cfg, string propsDir, string map) {
+        
+        protected void SaveTo(ConfigElement[] cfg, string propsDir, string map) {
             string path = propsDir + map + ".properties";
             if (!Directory.Exists(propsDir)) Directory.CreateDirectory(propsDir);
             ConfigElement.SerialiseSimple(cfg, path, this);
@@ -51,35 +51,36 @@ namespace GoldenSparks.Games {
     }
     
     /// <summary> Stores overall game configuration state. </summary>
-    public abstract class RoundsGameConfig {
-        [ConfigBool("start-on-server-start", "Game", false)] 
+    public abstract class RoundsGameConfig 
+    {
+        [ConfigBool("start-on-server-start", "General", false)] 
         public bool StartImmediately;
-        [ConfigBool("set-main-level", "Game", false)] 
+        [ConfigBool("set-main-level", "General", false)] 
         public bool SetMainLevel;
-        [ConfigBool("map-in-heartbeat", "Game", false)]
+        [ConfigBool("map-in-heartbeat", "General", false)]
         public bool MapInHeartbeat;
-        [ConfigStringList("maps", "Game")] 
+        [ConfigStringList("maps", "General")] 
         public List<string> Maps = new List<string>();
 
         /// <summary> Whether users are allowed to auto-join maps used by this game. </summary>
         /// <remarks> If false, users can only join these maps when manually /load ed. </remarks>
         public abstract bool AllowAutoload { get; }
-        public abstract string PropsPath { get; }
-        public abstract string GameName { get; }
+        protected abstract string GameName { get; }
+        public string Path;
         
         ConfigElement[] cfg;
         public virtual void Save() {
             if (cfg == null) cfg = ConfigElement.GetAll(GetType());
             
-            using (StreamWriter w = new StreamWriter(PropsPath)) {
+            using (StreamWriter w = new StreamWriter(Path)) {
                 w.WriteLine("#" + GameName + " configuration");
-                ConfigElement.SerialiseElements(cfg, w, this);
+                ConfigElement.Serialise(cfg, w, this);
             }
         }
         
         public virtual void Load() {
             if (cfg == null) cfg = ConfigElement.GetAll(GetType());
-            ConfigElement.ParseFile(cfg, PropsPath, this);
+            ConfigElement.ParseFile(cfg, Path, this);
         }
         
         

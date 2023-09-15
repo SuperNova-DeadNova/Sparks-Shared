@@ -19,19 +19,24 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace GoldenSparks {
-    
-    public class PlayerIgnores {
+namespace GoldenSparks
+{
+
+    public class PlayerIgnores
+    {
         public List<string> Names = new List<string>(), IRCNicks = new List<string>(), IRCNicks1 = new List<string>(), IRCNicks2 = new List<string>(), GlobalIRCNicks = new List<string>();
         public bool All, IRC, IRC1, IRC2, GlobalIRC, Titles, Nicks, EightBall, DrawOutput, WorldChanges;
-        
-        public void Load(Player p) {
+
+        public void Load(Player p)
+        {
             string path = "ranks/ignore/" + p.name + ".txt";
             if (!File.Exists(path)) return;
-            
-            try {
+
+            try
+            {
                 string[] lines = File.ReadAllLines(path);
-                foreach (string line in lines) {
+                foreach (string line in lines)
+                {
                     if (line == "&global") continue; // deprecated /ignore global
                     if (line == "&all") { All = true; continue; }
                     if (line == "&irc") { IRC = true; continue; }
@@ -41,14 +46,17 @@ namespace GoldenSparks {
 
                     if (line == "&titles") { Titles = true; continue; }
                     if (line == "&nicks") { Nicks = true; continue; }
-                    
+
                     if (line == "&8ball") { EightBall = true; continue; }
                     if (line == "&drawoutput") { DrawOutput = true; continue; }
                     if (line == "&worldchanges") { WorldChanges = true; continue; }
-                    
-                    if (line.StartsWith("&irc_")) {
+
+                    if (line.StartsWith("&irc_"))
+                    {
                         IRCNicks.Add(line.Substring("&irc_".Length));
-                    } else {
+                    }
+                    else
+                    {
                         Names.Add(line);
                     }
                     if (line.StartsWith("&irc1_"))
@@ -76,23 +84,29 @@ namespace GoldenSparks {
                         Names.Add(line);
                     }
                 }
-            } catch (IOException ex) {
+            }
+            catch (IOException ex)
+            {
                 Logger.LogError("Error loading ignores for " + p.name, ex);
             }
-            
+
             bool special = All || IRC || IRC1 || IRC2 || GlobalIRC || Titles || Nicks || EightBall || DrawOutput || WorldChanges;
-            if (special || Names.Count > 0 || IRCNicks.Count > 0 || IRCNicks1.Count >0 || IRCNicks2.Count > 0 || GlobalIRCNicks.Count > 0){
+            if (special || Names.Count > 0 || IRCNicks.Count > 0 || IRCNicks1.Count > 0 || IRCNicks2.Count > 0 || GlobalIRCNicks.Count > 0)
+            {
                 p.Message("&cType &a/ignore list &cto see who you are still ignoring");
             }
         }
-        
-        public void Save(Player p) {
+
+        public void Save(Player p)
+        {
             string path = "ranks/ignore/" + p.name + ".txt";
             if (!Directory.Exists("ranks/ignore"))
                 Directory.CreateDirectory("ranks/ignore");
-            
-            try {
-                using (StreamWriter w = new StreamWriter(path)) {
+
+            try
+            {
+                using (StreamWriter w = new StreamWriter(path))
+                {
                     if (All) w.WriteLine("&all");
                     if (IRC) w.WriteLine("&irc");
                     if (IRC1) w.WriteLine("&irc1");
@@ -103,11 +117,11 @@ namespace GoldenSparks {
 
                     if (Titles) w.WriteLine("&titles");
                     if (Nicks) w.WriteLine("&nicks");
-                    
-                    if (EightBall) w.WriteLine("&8ball");                    
+
+                    if (EightBall) w.WriteLine("&8ball");
                     if (DrawOutput) w.WriteLine("&drawoutput");
                     if (WorldChanges) w.WriteLine("&worldchanges");
-                    
+
                     foreach (string nick in IRCNicks) { w.WriteLine("&irc_" + nick); }
                     foreach (string nick in IRCNicks1) { w.WriteLine("&irc1_" + nick); }
                     foreach (string nick in IRCNicks2) { w.WriteLine("&irc2_" + nick); }
@@ -117,17 +131,22 @@ namespace GoldenSparks {
 
                     foreach (string name in Names) { w.WriteLine(name); }
                 }
-            } catch (IOException ex) {
+            }
+            catch (IOException ex)
+            {
                 Logger.LogError("Error saving ignores for " + p.name, ex);
             }
         }
-        
-        public void Output(Player p) {
-            if (Names.Count > 0) {
+
+        public void Output(Player p)
+        {
+            if (Names.Count > 0)
+            {
                 p.Message("&cCurrently ignoring the following players:");
                 p.Message(Names.Join(n => p.FormatNick(n)));
             }
-            if (IRCNicks.Count > 0) {
+            if (IRCNicks.Count > 0)
+            {
                 p.Message("&cCurrently ignoring the following IRC nicks:");
                 p.Message(IRCNicks.Join());
             }
@@ -154,9 +173,9 @@ namespace GoldenSparks {
             if (GlobalIRC) p.Message("&cIgnoring GlobalIRC chat");
             if (Titles) p.Message("&cPlayer titles do not show before names in chat");
             if (Nicks) p.Message("&cCustom player nicks do not show in chat");
-            
-            if (EightBall) p.Message("&cIgnoring &T/8ball");            
-            if (DrawOutput) p.Message("&cIgnoring draw command output");           
+
+            if (EightBall) p.Message("&cIgnoring &T/8ball");
+            if (DrawOutput) p.Message("&cIgnoring draw command output");
             if (WorldChanges) p.Message("&cIgnoring world change messages");
         }
     }

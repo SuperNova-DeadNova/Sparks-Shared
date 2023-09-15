@@ -1,13 +1,13 @@
 ﻿/*
-    Copyright 2010 MCSharp team (Modified for use with MCZall/MCLawl/GoldenSparks)
+    Copyright 2010 MCSharp team (Modified for use with MCZall/MCLawl/MCForge)
     
     Dual-licensed under the    Educational Community License, Version 2.0 and
     the GNU General Public License, Version 3 (the "Licenses"); you may
     not use this file except in compliance with the Licenses. You may
     obtain a copy of the Licenses at
     
-    http://www.opensource.org/licenses/ecl2.php
-    http://www.gnu.org/licenses/gpl-3.0.html
+    https://opensource.org/license/ecl-2-0/
+    https://www.gnu.org/licenses/gpl-3.0.html
     
     Unless required by applicable law or agreed to in writing,
     software distributed under the Licenses are distributed on an "AS IS"
@@ -17,58 +17,62 @@
  */
 using System;
 using System.Collections.Generic;
-using System.IO;
 using GoldenSparks.Config;
+using GoldenSparks.Generator;
+using GoldenSparks.Modules.GlobalRelay.GlobalIRC;
 using GoldenSparks.Modules.Relay.IRC;
 using GoldenSparks.Modules.Relay1.IRC1;
 using GoldenSparks.Modules.Relay2.IRC2;
-using GoldenSparks.Modules.GlobalRelay.GlobalIRC;
 
-namespace GoldenSparks {
-    public sealed class ServerConfig : EnvConfig {
-
-        [ConfigString("server-name", "Server", "[GoldenSparks] Default", false, " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~")]
-        public string Name = "[GoldenSparks] Default";
+namespace GoldenSparks 
+{
+    public sealed class ServerConfig : EnvConfig 
+    {
+        [ConfigString("server-name", "Server", "[MCGalaxy] Default", false, " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~")]
+        public string Name = "[MCGalaxy] Default";
         [ConfigString("motd", "Server", "Welcome", false)]
         public string MOTD = "Welcome!";
-        [ConfigInt("max-players", "Server", 12, 1, Server.MAX_PLAYERS)]
-        public int MaxPlayers = 12;
-        [ConfigInt("max-guests", "Server", 10, 1, Server.MAX_PLAYERS)]
-        public int MaxGuests = 10;
-        [ConfigString("listen-ip", "Server", "0.0.0.0")]
-        public string ListenIP = "0.0.0.0";
+        [ConfigInt("max-players", "Server", 16, 1, Server.MAX_PLAYERS)]
+        public int MaxPlayers = 16;
+        [ConfigInt("max-guests", "Server", 14, 1, Server.MAX_PLAYERS)]
+        public int MaxGuests = 14;
         [ConfigInt("port", "Server", 25565, 0, 65535)]
         public int Port = 25565;
         [ConfigBool("public", "Server", false)]
         public bool Public = false;
         [ConfigBool("verify-names", "Server", true)]
         public bool VerifyNames = true;
-        [ConfigBool("support-web-client", "Server", true)]
-        public bool WebClient = true;
-        [ConfigBool("allow-ip-forwarding", "Webclient", true)]
-        public bool AllowIPForwarding = true;
         [ConfigString("default-rank", "Server", "guest")]
         public string DefaultRankName = "guest";
-        
+        [ConfigString("server-owner", "Server", "the owner")]
+        public string OwnerName = "the owner";
+
         [ConfigBool("autoload", "Level", true)]
         public bool AutoLoadMaps = true;        
         /// <summary> true if maps sees server-wide chat, false if maps have level-only/isolated chat </summary>
         [ConfigBool("world-chat", "Level", true)]
         public bool ServerWideChat = true;
-        [ConfigString("main-name", "Level", "sparks", false, "()._+,-")]
-        public string MainLevel = "randomstrangers";
+        [ConfigString("main-name", "Level", "main", false, "()._+,-")]
+        public string MainLevel = "main";
         [ConfigString("default-texture-url", "Level", "", true)]
         public string DefaultTerrain = "";
         [ConfigString("default-texture-pack-url", "Level", "", true)]
-        public string DefaultTexture = "";
-        
-        [ConfigString("ssl-certificate-path", "Other", "", true)]
-        public string SslCertPath = "";
-        [ConfigString("ssl-certificate-password", "Other", "", true)]
-        public string SslCertPass = "";
-        [ConfigString("HeartbeatURL", "Other", "http://www.classicube.net/heartbeat.jsp", false, ":/.,")]
-        public string HeartbeatURL = "http://www.classicube.net/heartbeat.jsp";
+        public string DefaultTexture = "";          
 
+        [ConfigBool("use-whitelist", "Security", false)]
+        public bool WhitelistedOnly = false;        
+        [ConfigBool("admin-verification", "Security", true)]
+        public bool verifyadmins = true;
+        [ConfigPerm("verify-admin-perm", "Security", LevelPermission.Operator)]
+        public LevelPermission VerifyAdminsRank = LevelPermission.Operator;
+        
+        [ConfigBool("support-web-client", "Webclient", true)]
+        public bool WebClient = true;
+        [ConfigBool("allow-ip-forwarding", "Webclient", true)]
+        public bool AllowIPForwarding = true;
+
+        [ConfigString("HeartbeatURL", "Other", "http://www.classicube.net/heartbeat.jsp", false, ":/.,")]
+        public string HeartbeatURL = "http://www.classicube.net/heartbeat.jsp";        
         [ConfigBool("core-secret-commands", "Other", true)]
         public bool CoreSecretCommands = true;
         [ConfigBool("MCLawl-secret-commands", "Other", true)]
@@ -80,15 +84,13 @@ namespace GoldenSparks {
         
         [ConfigInt("position-interval", "Other", 100, 20, 2000)]
         public int PositionUpdateInterval = 100;
-        [ConfigBool("classicube-account-plus", "Server", false)]
-        public bool ClassicubeAccountPlus = false;
         [ConfigBool("agree-to-rules-on-entry", "Other", false)]
         public bool AgreeToRulesOnEntry = false;
         [ConfigBool("admins-join-silent", "Other", false)]
         public bool AdminsJoinSilently = false;
         
         [ConfigBool("check-updates", "Update", false)]
-        public bool CheckForUpdates = false;
+        public bool CheckForUpdates = true;
         [ConfigBool("enable-cpe", "Server", true)]
         public bool EnableCPE = true;
         [ConfigBool("checkpoints-respawn-clientside", "Other", true)]
@@ -102,7 +104,7 @@ namespace GoldenSparks {
         public bool PhysicsRestart = true;
         [ConfigInt("physics-undo-max", "Other", 50000)]
         public int PhysicsUndo = 50000;
-        
+
         [ConfigTimespan("backup-time", "Backup", 300, false)]
         public TimeSpan BackupInterval = TimeSpan.FromSeconds(300);
         [ConfigTimespan("blockdb-backup-time", "Backup", 60, false)]
@@ -115,18 +117,14 @@ namespace GoldenSparks {
 
         [ConfigInt("max-bots-per-level", "Other", 192, 0, 256)]
         public int MaxBotsPerLevel = 192;
-        [ConfigBool("announce-deathcount", "Other", true)]
+        [ConfigBool("deathcount", "Other", true)]
         public bool AnnounceDeathCount = true;
-        [ConfigBool("use-whitelist", "Other", false)]
-        public bool WhitelistedOnly = false;
         [ConfigBool("repeat-messages", "Other", false)]
         public bool RepeatMBs = false;
         [ConfigTimespan("announcement-interval", "Other", 5, true)]
         public TimeSpan AnnouncementInterval = TimeSpan.FromMinutes(5);
         [ConfigString("money-name", "Other", "moneys")]
-        public string Currency = "moneys";        
-        [ConfigString("server-owner", "Other", "the owner")]
-        public string OwnerName = "the owner";
+        public string Currency = "moneys";
         
         [ConfigBool("guest-limit-notify", "Other", false)]
         public bool GuestLimitNotify = false;
@@ -148,16 +146,28 @@ namespace GoldenSparks {
         [ConfigFloat("draw-reload-threshold", "Other", 0.001f, 0, 1)]
         public float DrawReloadThreshold = 0.001f;
         [ConfigBool("allow-tp-to-higher-ranks", "Other", true)]
-        public bool HigherRankTP = true;
+        public bool HigherRankTP = true;        
+        [ConfigPerm("os-perbuild-default", "Other", LevelPermission.Owner)]
+        public LevelPermission OSPerbuildDefault = LevelPermission.Owner; 
+        [ConfigBool("protect-staff-ips", "Other", true)]
+        public bool ProtectStaffIPs = true;
+        [ConfigBool("classicube-account-plus", "Other", false)]
+        public bool ClassicubeAccountPlus = false;
+        // technically a Server option, but it's a common mistake to think
+        //  this option needs changing to server's IP (0.0.0.0 = listen on all network interfaces)
+        [ConfigString("listen-ip", "Other", "0.0.0.0")]
+        public string ListenIP = "0.0.0.0";
+        [ConfigStringList("disabled-commands", "Other")]
+        public List<string> DisabledCommands = new List<string>();
+        [ConfigStringList("disabled-modules", "Other")]
+        public List<string> DisabledModules = new List<string>();
+        [ConfigTimespan("death-invulnerability-cooldown", "Other", 2, false)]
+        public TimeSpan DeathCooldown = TimeSpan.FromSeconds(2);
 
-        [ConfigPerm("os-perbuild-default", "Other", LevelPermission.Nobody)]
-        public LevelPermission OSPerbuildDefault = LevelPermission.Nobody;  
-
-        
         [ConfigBool("irc", "IRC bot", false)]
         public bool UseIRC = false;
-        [ConfigInt("irc-port", "IRC bot", 6667, 0, 65535)]
-        public int IRCPort = 6667;
+        [ConfigInt("irc-port", "IRC bot", 6697, 0, 65535)]
+        public int IRCPort = 6697;
         [ConfigString("irc-server", "IRC bot", "irc.esper.net")]
         public string IRCServer = "irc.esper.net";
         [ConfigString("irc-nick", "IRC bot", "ForgeBot")]
@@ -222,7 +232,6 @@ namespace GoldenSparks {
         public bool IRCSSL2 = false;
         [ConfigString("irc-ignored-nicks2", "IRC bot2", "", true)]
         public string IRCIgnored2 = "";
-
         [ConfigBool("UseMySQL", "Database", false)]
         public bool UseMySQL = false;
         [ConfigString("host", "Database", "127.0.0.1")]
@@ -250,7 +259,6 @@ namespace GoldenSparks {
         public IRCControllerVerify IRCVerify = IRCControllerVerify.HalfOp;
         [ConfigPerm("irc-controller-rank", "IRC bot", LevelPermission.Admin)]
         public LevelPermission IRCControllerRank = LevelPermission.Admin;
-
         [ConfigBool("irc-player-titles1", "IRC bot1", true)]
         public bool IRCShowPlayerTitles1 = true;
         [ConfigBool("irc-show-world-changes1", "IRC bot1", false)]
@@ -277,6 +285,7 @@ namespace GoldenSparks {
         [ConfigPerm("irc-controller-rank2", "IRC bot2", LevelPermission.Admin)]
         public LevelPermission IRCControllerRank2 = LevelPermission.Admin;
 
+
         [ConfigBool("tablist-rank-sorted", "Tablist", true)]
         public bool TablistRankSorted = true;
         [ConfigBool("tablist-global", "Tablist", false)]
@@ -289,14 +298,13 @@ namespace GoldenSparks {
         [ConfigBool("dollar-before-dollar", "Chat", true)]
         public bool DollarNames = true;
         [ConfigStringList("disabledstandardtokens", "Chat")]
-        internal List<string> DisabledChatTokens = new List<string>();
+        public List<string> DisabledChatTokens = new List<string>();
         [ConfigBool("profanity-filter", "Chat", false)]
         public bool ProfanityFiltering = false;
         [ConfigString("profanity-replacement", "Chat", "*")]
         public string ProfanityReplacement = "*";
-        [ConfigString("Core-State", "Chat", "&6S&ep&6a&er&6k&ei&6e")]
-        public string CoreState = "&6S&ep&6a&er&6k&ei&6e";
-
+        [ConfigString("host-state", "Chat", "Alive")]
+        public string CoreState = "Alive";
         
         [ConfigColor("defaultColor", "Colors", "&e")]
         public string DefaultColor = "&e";
@@ -314,11 +322,11 @@ namespace GoldenSparks {
         public string HelpDescriptionColor = "&e";
         [ConfigColor("warning-error-color", "Colors", "&c")]
         public string WarningErrorColor = "&c";
-        
-        [ConfigBool("cheapmessage", "Other", true)]
-        public bool ShowInvulnerableMessage = true;        
-        [ConfigString("cheap-message-given", "Messages", " is now invulnerable")]
-        public string InvulnerableMessage = " is now invulnerable";
+
+        [ConfigBool("cheapmessage", "Messages", true)]
+        public bool ShowInvincibleMessage = true;        
+        [ConfigString("cheap-message-given", "Messages", " is now invincible")]
+        public string InvincibleMessage = " is now invincible";
         [ConfigString("custom-ban-message", "Messages", "You're banned!")]
         public string DefaultBanMessage = "You're banned!";
         [ConfigString("custom-shutdown-message", "Messages", "Server shutdown. Rejoin in 10 seconds.")]
@@ -326,12 +334,21 @@ namespace GoldenSparks {
         [ConfigString("custom-promote-message", "Messages", "&6Congratulations for working hard and getting &2PROMOTED!")]
         public string DefaultPromoteMessage = "&6Congratulations for working hard and getting &2PROMOTED!";
         [ConfigString("custom-demote-message", "Messages", "&4DEMOTED! &6We're sorry for your loss. Good luck on your future endeavors! &1:'(")]
-        public string DefaultDemoteMessage = "&4DEMOTED! &6We're sorry for your loss. Good luck on your future endeavors! &1:'(";       
+        public string DefaultDemoteMessage = "&4DEMOTED! &6We're sorry for your loss. Good luck on your future endeavors! &1:'(";
         [ConfigString("custom-restart-message", "Messages", "Server restarted. Sign in again and rejoin.")]
         public string DefaultRestartMessage = "Server restarted. Sign in again and rejoin.";
         [ConfigString("custom-whitelist-message", "Messages", "This is a private server!")]
         public string DefaultWhitelistMessage = "This is a private server!";
-        
+        [ConfigString("default-login-message", "Messages", "connected")]
+        public string DefaultLoginMessage = "connected";
+        [ConfigString("default-logout-message", "Messages", "disconnected")]
+        public string DefaultLogoutMessage = "disconnected";
+
+        [ConfigString("default-mapgen-theme", "Mapgen", "flat")]
+        public string DefaultMapGenTheme = "flat";
+        [ConfigEnum("default-mapgen-biome", "Mapgen", MapGenBiomeName.Forest, typeof(MapGenBiomeName))]
+        public MapGenBiomeName DefaultMapGenBiome = MapGenBiomeName.Forest;
+
         static readonly bool[] defLogLevels = new bool[] { 
             true,true,true,true,true,true, true,true,true, 
             true,true,true,true,true,true, true,true };
@@ -339,15 +356,8 @@ namespace GoldenSparks {
         public bool LogNotes = true;
         [ConfigBoolArray("file-logging", "Logging", true, 17)]
         public bool[] FileLogging = defLogLevels;
-
         [ConfigBoolArray("GoldenSparks-logging", "Logging", true, 17)]
         public bool[] GoldenSparksLogging = defLogLevels;
-
-
-        [ConfigBool("admin-verification", "Admin", false)]
-        public bool verifyadmins = false;
-        [ConfigPerm("verify-admin-perm", "Admin", LevelPermission.Operator)]
-        public LevelPermission VerifyAdminsRank = LevelPermission.Operator;
         
         [ConfigBool("mute-on-spam", "Spam control", false)]
         public bool ChatSpamCheck = false;

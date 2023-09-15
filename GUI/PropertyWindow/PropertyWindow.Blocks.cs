@@ -6,8 +6,8 @@
     not use this file except in compliance with the Licenses. You may
     obtain a copy of the Licenses at
     
-    http://www.opensource.org/licenses/ecl2.php
-    http://www.gnu.org/licenses/gpl-3.0.html
+    https://opensource.org/license/ecl-2-0/
+    https://www.gnu.org/licenses/gpl-3.0.html
     
     Unless required by applicable law or agreed to in writing,
     software distributed under the Licenses are distributed on an "AS IS"
@@ -39,14 +39,15 @@ namespace GoldenSparks.Gui {
             blockPermsChanged.Clear();
             blockIDMap = new List<BlockID>();
             
-            for (int b = 0; b < blockPropsChanged.Length; b++) {
+            for (int b = 0; b < blockPropsChanged.Length; b++) 
+            {
                 blockPropsChanged[b] = Block.Props[b];
                 blockPropsChanged[b].ChangedScope = 0;
                 
                 BlockID block = (BlockID)b;
                 if (!Block.ExistsGlobal(block)) continue;
+                
                 string name = Block.GetName(Player.Sparks, block);
-
                 blk_list.Items.Add(name);
                 blockIDMap.Add(block);
             }
@@ -58,30 +59,43 @@ namespace GoldenSparks.Gui {
         }
 
         void SaveBlocks() {
-            if (!BlocksChanged()) { LoadBlocks(); return; }
+            if (blockPermsChanged.Count > 0)
+                SaveBlockPermissions();            
+            if (AnyBlockPropsChanged())
+                SaveBlockProps();
             
-            for (int b = 0; b < blockPropsChanged.Length; b++) {
+            LoadBlocks();
+        }
+        
+        void SaveBlockPermissions() {
+            foreach (BlockPerms changed in blockPermsChanged) 
+            {
+                BlockPerms orig = BlockPerms.Find(changed.ID);
+                changed.CopyPermissionsTo(orig);
+            }
+            
+            BlockPerms.Save();
+            BlockPerms.ApplyChanges();
+            BlockPerms.ResendAllBlockPermissions();
+        }
+        
+        bool AnyBlockPropsChanged() {
+            for (int b = 0; b < blockPropsChanged.Length; b++) 
+            {
+                if (blockPropsChanged[b].ChangedScope != 0) return true;
+            }
+            return false;
+        }
+        
+        void SaveBlockProps() {
+            for (int b = 0; b < blockPropsChanged.Length; b++) 
+            {
                 if (blockPropsChanged[b].ChangedScope == 0) continue;
                 Block.Props[b] = blockPropsChanged[b];
             }
             
-            foreach (BlockPerms changed in blockPermsChanged) {
-                BlockPerms.Set(changed.ID, changed.MinRank, 
-            	               changed.Allowed, changed.Disallowed);
-            }
-            BlockPerms.ResendAllBlockPermissions();
-            
-            BlockProps.Save("default", Block.Props, 1);
-            BlockPerms.Save();
+            BlockProps.Save("default", Block.Props, 1); 
             Block.SetBlocks();
-            LoadBlocks();
-        }
-        
-        bool BlocksChanged() {
-            for (int b = 0; b < blockPropsChanged.Length; b++) {
-                if (blockPropsChanged[b].ChangedScope != 0) return true;
-            }
-            return blockPermsChanged.Count > 0;
         }
         
         

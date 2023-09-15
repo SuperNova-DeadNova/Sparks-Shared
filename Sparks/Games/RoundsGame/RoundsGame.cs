@@ -1,13 +1,13 @@
 ﻿/*
-    Copyright 2015 GoldenSparks
+    Copyright 2015 MCGalaxy
         
     Dual-licensed under the Educational Community License, Version 2.0 and
     the GNU General Public License, Version 3 (the "Licenses"); you may
     not use this file except in compliance with the Licenses. You may
     obtain a copy of the Licenses at
     
-    http://www.opensource.org/licenses/ecl2.php
-    http://www.gnu.org/licenses/gpl-3.0.html
+    https://opensource.org/license/ecl-2-0/
+    https://www.gnu.org/licenses/gpl-3.0.html
     
     Unless required by applicable law or agreed to in writing,
     software distributed under the Licenses are distributed on an "AS IS"
@@ -18,17 +18,19 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using GoldenSparks.Commands.World;
 using GoldenSparks.Events.GameEvents;
 
-namespace GoldenSparks.Games {
-    
-    public abstract partial class RoundsGame : IGame {
+namespace GoldenSparks.Games 
+{    
+    public abstract partial class RoundsGame : IGame 
+    {
         public int RoundsLeft;
         public bool RoundInProgress;
         public DateTime RoundStart;
         public string LastMap = "";
         public LevelPicker Picker;
+        
+        protected abstract string WelcomeMessage { get; }
         
         /// <summary> Messages general info about current round and players. </summary>
         /// <remarks> e.g. who is alive, points of each team, etc. </remarks>
@@ -37,20 +39,23 @@ namespace GoldenSparks.Games {
         public abstract RoundsGameConfig GetConfig();
         /// <summary> Updates state from the map specific configuration file. </summary>
         public abstract void UpdateMapConfig();
-
+        
         /// <summary> Runs a single round of this game. </summary>
-        public abstract void DoRound();
+        protected abstract void DoRound();
         /// <summary> Gets the list of all players in this game. </summary>
-        public abstract List<Player> GetPlayers();
+        protected abstract List<Player> GetPlayers();
         /// <summary> Saves stats to the database for the given player. </summary>
-        public virtual void SaveStats(Player pl) { }
+        protected virtual void SaveStats(Player pl) { }
         
         public override bool HandlesChatMessage(Player p, string message) {
-            if (!Running || p.level != Map) return false;
             return Picker.HandlesMessage(p, message);
         }
-
-        public abstract void StartGame();
+        
+        public override bool ClaimsMap(string map) {
+            return GetConfig().Maps.CaselessContains(map);
+        }
+        
+        protected abstract void StartGame();
         public virtual void Start(Player p, string map, int rounds) {
             map = GetStartMap(p, map);
             if (map == null) {
@@ -86,13 +91,12 @@ namespace GoldenSparks.Games {
             if (!GetConfig().StartImmediately) return;
             try {
                 Start(Player.Sparks, "", int.MaxValue);
-
             } catch (Exception ex) { 
                 Logger.LogError("Error auto-starting " + GameName, ex); 
             }
         }
-
-        public virtual string GetStartMap(Player p, string forcedMap) {
+        
+        protected virtual string GetStartMap(Player p, string forcedMap) {
             if (forcedMap.Length > 0) return forcedMap;
             List<string> maps = Picker.GetCandidateMaps(this);
             
@@ -105,7 +109,8 @@ namespace GoldenSparks.Games {
                 while (Running && RoundsLeft > 0) {
                     RoundInProgress = false;
                     if (RoundsLeft != int.MaxValue) RoundsLeft--;
-                    
+
+                    if (Map != null) Logger.Log(LogType.GameActivity, "[{0}] Round started on {1}", GameName, Map.ColoredName);
                     DoRound();
                     if (Running) EndRound();
                     if (Running) VoteAndMoveToNextMap();
@@ -120,12 +125,11 @@ namespace GoldenSparks.Games {
             }
             IGame.RunningGames.Remove(this);
         }
-
-        public virtual bool SetMap(string map) {
+        
+        protected virtual bool SetMap(string map) {
             Picker.QueuedMap = null;
             Level next = LevelInfo.FindExact(map);
             if (next == null) next = LevelActions.Load(Player.Sparks, map, false);
-
             if (next == null) return false;
             
             Map = next;
@@ -135,22 +139,28 @@ namespace GoldenSparks.Games {
             UpdateMapConfig();
             return true;
         }
-
-        public void DoCountdown(string format, int delay, int minThreshold) {
-            const CpeMessageType type = CpeMessageType.Announcement;
-            for (int i = delay; i > 0 && Running; i--) {
-                if (i == 1) {
-                    MessageMap(type, String.Format(format, i)
-                               .Replace("seconds", "second"));
-                } else if (i < minThreshold || (i % 10) == 0) {
-                    MessageMap(type, String.Format(format, i));
-                }
+        
+        protected void DoCountdown(string format, int delay, int minThreshold) {
+            for (int i = delay; i > 0 && Running; i--) 
+            {
+                MessageCountdown(format, i, minThreshold);
                 Thread.Sleep(1000);
             }
-            MessageMap(type, "");
+            MessageMap(CpeMessageType.Announcement, "");
         }
 
-        public List<Player> DoRoundCountdown(int delay) {
+        protected void MessageCountdown(string format, int i, int minThreshold) {
+            const CpeMessageType type = CpeMessageType.Announcement;
+            
+            if (i == 1) {
+                MessageMap(type, String.Format(format, i)
+                           .Replace("seconds", "second"));
+            } else if (i < minThreshold || (i % 10) == 0) {
+                MessageMap(type, String.Format(format, i));
+            }
+        }
+        
+        protected List<Player> DoRoundCountdown(int delay) {
             while (true) {
                 RoundStart = DateTime.UtcNow.AddSeconds(delay);
                 if (!Running) return null;
@@ -163,8 +173,8 @@ namespace GoldenSparks.Games {
                 Map.Message("&WNeed 2 or more non-ref players to start a round.");
             }
         }
-
-        public virtual void VoteAndMoveToNextMap() {
+        
+        protected virtual void VoteAndMoveToNextMap() {
             Picker.AddRecentMap(Map.MapName);
             if (RoundsLeft == 0) return;
             
@@ -183,16 +193,16 @@ namespace GoldenSparks.Games {
                 ContinueOnSameMap();
             } else {
                 TransferPlayers(lastMap);
-                lastMap.Unload();
+                lastMap.Unload(true);
             }
         }
-
-        public virtual void AnnounceMapChange(string newMap) {
+        
+        protected virtual void AnnounceMapChange(string newMap) {
             Map.Message("The next map has been chosen - &c" + newMap);
             Map.Message("Please wait while you are transfered.");
         }
-
-        public virtual void ContinueOnSameMap() {
+        
+        protected virtual void ContinueOnSameMap() {
             Map.Message("Continuing " + GameName + " on the same map");
             Level old = Level.Load(Map.MapName);
             
@@ -205,10 +215,10 @@ namespace GoldenSparks.Games {
             
             // Try to reset changes made to this map, if possible
             // TODO: do this in a nicer way
-            Map.blocks = old.blocks;
+            // TODO this doesn't work properly with physics either
+            Map.blocks       = old.blocks;
             Map.CustomBlocks = old.CustomBlocks;
             LevelActions.ReloadAll(Map, Player.Sparks, false);
-
             Map.Message("Reset map to latest backup");
         }
         
@@ -219,7 +229,6 @@ namespace GoldenSparks.Games {
             
             foreach (Player pl in online) {
                 pl.Game.RatedMap = false;
-                pl.Game.PledgeSurvive = false;
                 if (pl.level != Map && pl.level == lastMap) transfers.Add(pl);
             }
             
@@ -232,8 +241,8 @@ namespace GoldenSparks.Games {
                 transfers.RemoveAt(i);
             }
         }
-
-        public abstract void EndGame();
+        
+        protected abstract void EndGame();
         public override void End() {
             if (!Running) return;
             Running = false;
@@ -253,10 +262,10 @@ namespace GoldenSparks.Games {
             RoundInProgress = false;
             
             Player[] players = PlayerInfo.Online.Items;
-            foreach (Player pl in players) {
+            foreach (Player pl in players) 
+            {
                 if (pl.level != Map) continue;
                 pl.Game.RatedMap = false;
-                pl.Game.PledgeSurvive = false;
                 PlayerLeftGame(pl);
                 
                 TabList.Update(pl, true);
@@ -275,8 +284,8 @@ namespace GoldenSparks.Games {
             if (Map != null) Map.AutoUnload();
             Map = null;
         }
-
-        public void UpdateAllMotd() {
+        
+        protected void UpdateAllMotd() {
             List<Player> players = GetPlayers();
             foreach (Player p in players) {
                 if (p.Supports(CpeExt.InstantMOTD)) p.SendMapMotd();

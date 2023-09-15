@@ -1,13 +1,13 @@
 ﻿/*
-    Copyright 2015 GoldenSparks
+    Copyright 2015 MCGalaxy
         
     Dual-licensed under the Educational Community License, Version 2.0 and
     the GNU General Public License, Version 3 (the "Licenses"); you may
     not use this file except in compliance with the Licenses. You may
     obtain a copy of the Licenses at
     
-    http://www.opensource.org/licenses/ecl2.php
-    http://www.gnu.org/licenses/gpl-3.0.html
+    https://opensource.org/license/ecl-2-0/
+    https://www.gnu.org/licenses/gpl-3.0.html
     
     Unless required by applicable law or agreed to in writing,
     software distributed under the Licenses are distributed on an "AS IS"
@@ -19,8 +19,10 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace GoldenSparks.Commands.Info {  
-    public sealed class CmdPClients : Command2 {        
+namespace GoldenSparks.Commands.Info 
+{
+    public sealed class CmdPClients : Command2 
+    {
         public override string name { get { return "PClients"; } }
         public override string shortcut { get { return "Clients"; } }
         public override string type { get { return CommandTypes.Information; } }

@@ -1,15 +1,15 @@
 ﻿/*
-    Copyright 2010 MCLawl Team - Written by Valek (Modified by GoldenSparks)
+    Copyright 2010 MCLawl Team - Written by Valek (Modified by MCGalaxy)
 
-    Edited for use with GoldenSparks
+    Edited for use with MCGalaxy
  
     Dual-licensed under the Educational Community License, Version 2.0 and
     the GNU General Public License, Version 3 (the "Licenses"); you may
     not use this file except in compliance with the Licenses. You may
     obtain a copy of the Licenses at
     
-    http://www.opensource.org/licenses/ecl2.php
-    http://www.gnu.org/licenses/gpl-3.0.html
+    https://opensource.org/license/ecl-2-0/
+    https://www.gnu.org/licenses/gpl-3.0.html
     
     Unless required by applicable law or agreed to in writing,
     software distributed under the Licenses are distributed on an "AS IS"
@@ -18,74 +18,77 @@
     permissions and limitations under the Licenses.
  */
 using System;
-using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
-using System.Text;
 
-namespace GoldenSparks.Scripting 
-{    
-    public static class ScriptingOperations 
-    {   
-        public static ICompiler GetCompiler(Player p, string name) {
-            if (name.Length == 0) return ICompiler.Compilers[0];
-            
-            foreach (ICompiler comp in ICompiler.Compilers) 
-            {
-                if (comp.ShortName.CaselessEq(name)) return comp;
+namespace GoldenSparks.Scripting
+{
+    public static class ScriptingOperations
+    {
+        public static bool LoadCommands(Player p, string path) {
+            if (!File.Exists(path)) {
+                p.Message("File &9{0} &Snot found.", path);
+                return false;
             }
             
-            p.Message("&WUnknown language \"{0}\"", name);
-            p.Message("&HAvailable languages: &f{0}",
-                      ICompiler.Compilers.Join(c => c.ShortName + " (" + c.FullName + ")"));
-            return null;
+            try {
+                List<Command> cmds = IScripting.LoadCommands(path);
+                
+                p.Message("Successfully loaded &T{0}",
+                          cmds.Join(c => "/" + c.name));
+                return true;
+            } catch (AlreadyLoadedException ex) {
+                p.Message(ex.Message);
+                return false;
+            } catch (Exception ex) {
+                p.Message(IScripting.DescribeLoadError(path, ex));
+                Logger.LogError("Error loading commands from " + path, ex);
+                return false;
+            }
         }
 
-
-        const int MAX_LOG = 2;
-    	
-        /// <summary> Attempts to compile the given source code files into a .dll </summary>
-        /// <param name="p"> Player to send messages to </param>
-        /// <param name="type"> Type of files being compiled (e.g. Plugin, Command) </param>
-        /// <param name="srcs"> Path of the source code files </param>
-        /// <param name="dst"> Path to the destination .dll </param>
-        /// <returns> The compiler results, or null if compilation failed </returns>
-        /// <remarks> If dstPath is null, compiles to an in-memory .dll instead. </remarks>
-        public static CompilerResults Compile(Player p, ICompiler compiler, string type, string[] srcs, string dst) {
-            foreach (string path in srcs) 
-            {
-                if (File.Exists(path)) continue;
-                
+        public static bool LoadPlugins(Player p, string path) {
+            if (!File.Exists(path)) {
                 p.Message("File &9{0} &Snot found.", path);
-                return null;
+                return false;
             }
             
-            CompilerResults results = compiler.Compile(srcs, dst);
-            if (!results.Errors.HasErrors) {
-                p.Message("{0} compiled successfully from {1}", 
-                        type, srcs.Join(file => Path.GetFileName(file)));
-                return results;
+            try {
+                List<Plugin> plugins = IScripting.LoadPlugin(path, false);
+                
+                p.Message("Plugin {0} loaded successfully",
+                          plugins.Join(pl => pl.name));
+                return true;
+            } catch (AlreadyLoadedException ex) {
+                p.Message(ex.Message);
+                return false;
+            } catch (Exception ex) {
+                p.Message(IScripting.DescribeLoadError(path, ex));
+                Logger.LogError("Error loading plugins from " + path, ex);
+                return false;
             }
-            
-            SummariseErrors(results, srcs, p);
-            return null;
         }
         
-        static void SummariseErrors(CompilerResults results, string[] srcs, Player p) {
-            int logged = 0;
-            foreach (CompilerError err in results.Errors) 
-            {
-                p.Message("&W{1} - {0}", err.ErrorText,
-                          ICompiler.DescribeError(err, srcs, " #" + err.ErrorNumber));
-                logged++;
-                if (logged >= MAX_LOG) break;
+        
+        public static bool UnloadCommand(Player p, Command cmd) {          
+            if (Command.IsCore(cmd)) {
+                p.Message("&T/{0} &Sis a core command, you cannot unload it.", cmd.name); 
+                return false;
+            }
+   
+            Command.Unregister(cmd);
+            p.Message("Command &T/{0} &Sunloaded successfully", cmd.name);
+            return true;
+        }
+        
+        public static bool UnloadPlugin(Player p, Plugin plugin) {
+            if (!Plugin.Unload(plugin)) {
+                p.Message("&WError unloading plugin. See error logs for more information.");
+                return false;
             }
             
-            if (results.Errors.Count > MAX_LOG) {
-                p.Message(" &W.. and {0} more", results.Errors.Count - MAX_LOG);
-            }
-            p.Message("&WCompilation error. See " + ICompiler.ErrorPath + " for more information.");
+            p.Message("Plugin {0} &Sunloaded successfully", plugin.name);
+            return true;
         }
     }
 }

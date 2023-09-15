@@ -1,11 +1,11 @@
 ﻿/*
-Copyright 2010 MCSharp team (Modified for use with MCZall/MCLawl/GoldenSparks)
+Copyright 2010 MCSharp team (Modified for use with MCZall/MCLawl/MCForge)
 Dual-licensed under the Educational Community License, Version 2.0 and
 the GNU General Public License, Version 3 (the "Licenses"); you may
 not use this file except in compliance with the Licenses. You may
 obtain a copy of the Licenses at
-http://www.opensource.org/licenses/ecl2.php
-http://www.gnu.org/licenses/gpl-3.0.html
+https://opensource.org/license/ecl-2-0/
+https://www.gnu.org/licenses/gpl-3.0.html
 Unless required by applicable law or agreed to in writing,
 software distributed under the Licenses are distributed on an "AS IS"
 BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
@@ -48,26 +48,35 @@ namespace GoldenSparks.Gui {
         }
         
         void SaveCommands() {
-            if (!CommandsChanged()) { LoadCommands(); return; }
+            if (commandPermsChanged.Count > 0)
+                SaveCommandPermissions();
+            if (commandExtraPermsChanged.Count > 0) 
+                SaveExtraCommandPermissions();
             
-            foreach (CommandPerms changed in commandPermsChanged) {
-                CommandPerms.Set(changed.CmdName, changed.MinRank,
-                                 changed.Allowed, changed.Disallowed);
-            }            
-            foreach (CommandExtraPerms changed in commandExtraPermsChanged) {
-                CommandExtraPerms orig = CommandExtraPerms.Find(changed.CmdName, changed.Num);
-                orig.MinRank = changed.MinRank;
-            }
-            
-            CommandExtraPerms.Save();
-            CommandPerms.Save();
-            CommandPerms.Load();
             LoadCommands();
         }
         
-        bool CommandsChanged() {
-            return commandExtraPermsChanged.Count > 0 || commandPermsChanged.Count > 0;
-        }        
+        void SaveCommandPermissions() {
+            foreach (CommandPerms changed in commandPermsChanged) 
+            {
+                CommandPerms orig = CommandPerms.Find(changed.CmdName);
+                changed.CopyPermissionsTo(orig);
+            }            
+            
+            CommandPerms.Save();
+            CommandPerms.ApplyChanges();
+        }
+        
+        void SaveExtraCommandPermissions() {
+            foreach (CommandExtraPerms changed in commandExtraPermsChanged) 
+            {
+                CommandExtraPerms orig = CommandExtraPerms.Find(changed.CmdName, changed.Num);
+                changed.CopyPermissionsTo(orig);
+            }
+            
+            CommandExtraPerms.Save();
+        }
+        
         
         void cmd_list_SelectedIndexChanged(object sender, EventArgs e) {
             string cmdName = cmd_list.SelectedItem.ToString();        
@@ -77,11 +86,6 @@ namespace GoldenSparks.Gui {
             
             commandPermsOrig = CommandPerms.Find(cmdName);
             commandPermsCopy = commandPermsChanged.Find(p => p.CmdName.CaselessEq(cmdName));
-            
-            // fix for when command is added to server but doesn't have permissions defined
-            if (commandPermsOrig == null) {
-                commandPermsOrig = new CommandPerms(cmdName, cmd.defaultRank, null, null);
-            }
             
             commandItems.SupressEvents = true;
             CommandInitExtraPerms();
@@ -100,7 +104,7 @@ namespace GoldenSparks.Gui {
                 cmd_cmbExtra4, cmd_cmbExtra5, cmd_cmbExtra6, cmd_cmbExtra7 };
             commandExtraLabels = new Label[] { cmd_lblExtra1, cmd_lblExtra2, cmd_lblExtra3,
                 cmd_lblExtra4, cmd_lblExtra5, cmd_lblExtra6, cmd_lblExtra7 };
-            GuiPerms.FillRanks(commandExtraBoxes, false);
+            GuiPerms.SetRanks(commandExtraBoxes);
         }
         
         ItemPerms CommandGetOrAddPermsChanged() {
@@ -125,7 +129,7 @@ namespace GoldenSparks.Gui {
         
         void cmd_btnCustom_Click(object sender, EventArgs e) {
             using (CustomCommands form = new CustomCommands()) {
-        		form.ShowDialog();
+                form.ShowDialog();
             }
         }
         
@@ -143,7 +147,7 @@ namespace GoldenSparks.Gui {
                 CommandExtraPerms perms = LookupExtraPerms(extraPermsList[i].CmdName, extraPermsList[i].Num);
                 if (perms == null) perms = extraPermsList[i];
                 
-                GuiPerms.SetDefaultIndex(commandExtraBoxes[i], perms.MinRank);
+                GuiPerms.SetSelectedRank(commandExtraBoxes[i], perms.MinRank);
                 commandExtraBoxes[i].Visible = true;
                 commandExtraLabels[i].Text = "+ " + perms.Desc;
                 commandExtraLabels[i].Visible = true;
@@ -161,8 +165,8 @@ namespace GoldenSparks.Gui {
         void cmd_cmbExtra_SelectedIndexChanged(object sender, EventArgs e) {
             ComboBox box = (ComboBox)sender;
             if (commandItems.SupressEvents) return;
-            int idx = box.SelectedIndex;
-            if (idx == -1) return;
+            GuiRank rank = (GuiRank)box.SelectedItem;
+            if (rank == null) return;
             
             int boxIdx = Array.IndexOf<ComboBox>(commandExtraBoxes, box);
             CommandExtraPerms orig = extraPermsList[boxIdx];
@@ -171,8 +175,8 @@ namespace GoldenSparks.Gui {
             if (copy == null) {
                 copy = orig.Copy();
                 commandExtraPermsChanged.Add(copy);
-            }            
-            copy.MinRank = GuiPerms.RankPerms[idx];
+            }
+            copy.MinRank = rank.Permission;
         }
     }
 }

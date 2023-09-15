@@ -1,11 +1,11 @@
 ﻿/*
-Copyright 2010 MCSharp team (Modified for use with MCZall/MCLawl/GoldenSparks)
+Copyright 2010 MCSharp team (Modified for use with MCZall/MCLawl/MCForge)
 Dual-licensed under the Educational Community License, Version 2.0 and
 the GNU General Public License, Version 3 (the "Licenses"); you may
 not use this file except in compliance with the Licenses. You may
 obtain a copy of the Licenses at
-http://www.opensource.org/licenses/ecl2.php
-http://www.gnu.org/licenses/gpl-3.0.html
+https://opensource.org/license/ecl-2-0/
+https://www.gnu.org/licenses/gpl-3.0.html
 Unless required by applicable law or agreed to in writing,
 software distributed under the Licenses are distributed on an "AS IS"
 BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
@@ -14,9 +14,7 @@ permissions and limitations under the Licenses.
  */
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Text;
-using GoldenSparks.Network;
 using GoldenSparks.Util;
 
 namespace GoldenSparks {
@@ -98,10 +96,7 @@ namespace GoldenSparks {
             new ChatToken("$model", "Model of the player", TokenModel),
             new ChatToken("$skin", "Skin of the player", TokenSkin),
             new ChatToken("$level", "Name of level/map player is on", TokenLevel),
-            new ChatToken("$ip", "IP of the player", TokenIP),
-            new ChatToken("$client", "Client of the player", TokenClient),
-            new ChatToken("$status", "Status of the Core", TokenHost),
-            new ChatToken("$host", "Status of the Core", TokenHost),
+            new ChatToken("$currency", "Name of server currency", TokenCurrency),   
         };
 
         static string TokenDate(Player p) { return DateTime.Now.ToString("yyyy-MM-dd"); }
@@ -109,8 +104,6 @@ namespace GoldenSparks {
         static string TokenIRC(Player p)  { return Server.Config.IRCServer + " > " + Server.Config.IRCChannels; }
         static string TokenBanned(Player p) { return Group.BannedRank.Players.Count.ToString(); }
         static string TokenServerName(Player p) { return Server.Config.Name; }
-
-        static string TokenHost(Player p) { return Server.Config.CoreState; }
         static string TokenServerMOTD(Player p) { return Server.Config.MOTD; }
         static string TokenLoaded(Player p) { return LevelInfo.Loaded.Count.ToString(); }
         static string TokenWorlds(Player p) { return LevelInfo.AllMapFiles().Length.ToString(); }
@@ -140,13 +133,11 @@ namespace GoldenSparks {
         static string TokenModel(Player p)   { return p.Model; }
         static string TokenSkin(Player p)    { return p.SkinName; }
         static string TokenLevel(Player p)   { return p.level == null ? null : p.level.name; }
-        static string TokenIP(Player p) { return p.ip; }
-        static string TokenClient(Player p) { return p.appName; }
-
+        static string TokenCurrency(Player p){ return Server.Config.Currency; }
 
         public static List<ChatToken> Custom = new List<ChatToken>();
-        static bool hookedCustom;
-        public static void LoadCustom() {            
+        static bool hookedCustom;        
+        internal static void LoadCustom() {            
             TextFile tokensFile = TextFile.Files["Custom $s"];
             tokensFile.EnsureExists();
             

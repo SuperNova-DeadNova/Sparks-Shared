@@ -61,7 +61,7 @@ namespace GoldenSparks.Gui.Popups
 			this.lblText.Name = "lblText";
 			this.lblText.Size = new System.Drawing.Size(226, 13);
 			this.lblText.TabIndex = 2;
-			this.lblText.Text = "New version of Sparkie found. Would you like to update?";
+			this.lblText.Text = "New version found. Would you like to update?";
 			// 
 			// UpdateCheck
 			// 
@@ -76,7 +76,7 @@ namespace GoldenSparks.Gui.Popups
 			this.MinimizeBox = false;
 			this.Name = "UpdateAvailable";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
-			this.Text = "Update Sparkie?";
+			this.Text = "Update?";
 			this.Closed += new System.EventHandler(this.UpdateCheck_Closed);
 			this.Load += new System.EventHandler(this.UpdateCheck_Load);
 			this.ResumeLayout(false);

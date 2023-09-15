@@ -1,13 +1,13 @@
 /*
-    Copyright 2010 MCSharp team (Modified for use with MCZall/MCLawl/GoldenSparks)
+    Copyright 2010 MCSharp team (Modified for use with MCZall/MCLawl/MCForge)
     
     Dual-licensed under the educational Community License, Version 2.0 and
     the GNU General Public License, Version 3 (the "Licenses"); you may
     not use this file except in compliance with the Licenses. You may
     obtain a copy of the Licenses at
     
-    http://www.opensource.org/licenses/ecl2.php
-    http://www.gnu.org/licenses/gpl-3.0.html
+    https://opensource.org/license/ecl-2-0/
+    https://www.gnu.org/licenses/gpl-3.0.html
     
     Unless required by applicable law or agreed to in writing,
     software distributed under the Licenses are distributed on an "AS IS"
@@ -42,19 +42,20 @@ namespace GoldenSparks.Modules.Awards
             if (awards.Count == 0) { p.Message("This server has no awards yet."); return; }
             
             List<string> playerAwards = PlayerAwards.Get(name);
-            StringFormatter<Award> formatter = (award) => FormaAward(award, playerAwards);
+            ItemPrinter<Award> printer = (p_, award) => PrintAward(p_, award, playerAwards);
             
             string cmd = name.Length == 0 ? "awards" : "awards " + name;
             string modifier = args.Length > offset ? args[offset] : "";
             
             p.Message("Awards {0} &Shas:", p.FormatNick(name));
-            MultiPageOutput.Output(p, awards, formatter,
-                                   cmd, "Awards", modifier, true);
+            Paginator.Output(p, awards, printer,
+                             cmd, "Awards", modifier);
         }
         
-        static string FormaAward(Award award, List<string> awards) {
+        static void PrintAward(Player p, Award award, List<string> awards) {
             bool has = awards != null && awards.CaselessContains(award.Name);
-            return (has ? "  &a" : "  &c") + award.Name + ": &7" + award.Description;
+            p.Message("  {0}{1}: &7{2}",  
+                      has ? "&a" : "&c", award.Name, award.Description);
         }
         
         public override void Help(Player p) {

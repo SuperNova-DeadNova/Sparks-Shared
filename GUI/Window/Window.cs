@@ -1,13 +1,13 @@
 /*    
-    Copyright 2010 MCSharp team (Modified for use with MCZall/MCLawl/GoldenSparks)
+    Copyright 2010 MCSharp team (Modified for use with MCZall/MCLawl/MCForge)
     
     Dual-licensed under the    Educational Community License, Version 2.0 and
     the GNU General Public License, Version 3 (the "Licenses"); you may
     not use this file except in compliance with the Licenses. You may
     obtain a copy of the Licenses at
     
-    http://www.opensource.org/licenses/ecl2.php
-    http://www.gnu.org/licenses/gpl-3.0.html
+    https://opensource.org/license/ecl-2-0/
+    https://www.gnu.org/licenses/gpl-3.0.html
     
     Unless required by applicable law or agreed to in writing,
     software distributed under the Licenses are distributed on an "AS IS"
@@ -17,19 +17,21 @@
 */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Threading;
 using System.Windows.Forms;
+using GoldenSparks.Events;
 using GoldenSparks.Events.LevelEvents;
 using GoldenSparks.Events.PlayerEvents;
 using GoldenSparks.Generator;
 using GoldenSparks.Gui.Popups;
 using GoldenSparks.Tasks;
 
-namespace GoldenSparks.Gui {
-    public partial class Window : Form {
+namespace GoldenSparks.Gui 
+{
+    public partial class Window : Form 
+    {
         // for cross thread use
         delegate void StringCallback(string s);
         delegate void PlayerListCallback(List<Player> players);
@@ -40,7 +42,7 @@ namespace GoldenSparks.Gui {
         Player curPlayer;
 
         public Window() {
-            logCallback = LogMessage;
+            logCallback = LogMessageCore;
             InitializeComponent();
         }
         
@@ -58,7 +60,7 @@ namespace GoldenSparks.Gui {
 Trying to mix two versions is unsupported - you may experience issues";
             string msg = string.Format(fmt, Server.SoftwareName, 
                                        gui_version, AssemblyFile(typeof(Window), "GoldenSparks.exe"),
-                                       dll_version, AssemblyFile(typeof(Server), "RandomStrangers_.dll"));
+                                       dll_version, AssemblyFile(typeof(Server), "MCGalaxy_.dll"));
             RunAsync(() => Popup.Warning(msg));
         }
         
@@ -101,8 +103,7 @@ Trying to mix two versions is unsupported - you may experience issues";
             // Normally this code would be in InitializeComponent method in Window.Designer.cs,
             //  however that doesn't work properly with some WINE versions (you get WINE icon instead)
             try {
-                ComponentResourceManager resources = new ComponentResourceManager(typeof(Window));
-                Icon = (Icon)(resources.GetObject("GoldenSparks"));
+                Icon = GetIcon();
                 GuiUtils.WinIcon = Icon;
             } catch { }
         }
@@ -143,17 +144,17 @@ Trying to mix two versions is unsupported - you may experience issues";
         LogCallback logCallback;
         
         void LogMessage(LogType type, string message) {
-            if (!Server.Config.FileLogging[(int)type]) return;
+            if (!Server.Config.GoldenSparksLogging[(int)type]) return;
             
-            if (InvokeRequired) {
-                try {
-                    BeginInvoke(logCallback, type, message); 
-                } catch (InvalidOperationException) {
-                    // This exception is thrown when trying to log
-                    //  messages after window has already been closed
-                }
-                return;
+            try {
+                 BeginInvoke(logCallback, type, message); 
+            } catch (InvalidOperationException) {
+                // This exception is thrown when trying to log
+                //  messages after window has already been closed
             }
+        }
+
+        void LogMessageCore(LogType type, string message) {
             if (Server.shuttingDown) return;
             string newline = Environment.NewLine;
             
@@ -229,6 +230,7 @@ Trying to mix two versions is unsupported - you may experience issues";
             OnPlayerConnectEvent.Register(Player_PlayerConnect, Priority.Low);
             OnPlayerDisconnectEvent.Register(Player_PlayerDisconnect, Priority.Low);
             OnSentMapEvent.Register(Player_OnJoinedLevel, Priority.Low);
+            OnModActionEvent.Register(Player_OnModAction, Priority.Low);
 
             OnLevelAddedEvent.Register(Level_LevelAdded, Priority.Low);
             OnLevelRemovedEvent.Register(Level_LevelRemoved, Priority.Low);
@@ -237,7 +239,7 @@ Trying to mix two versions is unsupported - you may experience issues";
             RunOnUI_Async(() => main_btnProps.Enabled = true);
         }
 
-        public void RunOnUI_Async(Action act) { BeginInvoke(act); }
+        public void RunOnUI_Async(UIAction act) { BeginInvoke(act); }
         
         void Player_PlayerConnect(Player p) {
             RunOnUI_Async(() => {
@@ -259,6 +261,14 @@ Trying to mix two versions is unsupported - you may experience issues";
                 Main_UpdateMapList();
                 Main_UpdatePlayersList();
                 Players_UpdateSelected(); 
+            });
+        }
+
+        void Player_OnModAction(ModAction action) {
+            if (action.Type != ModActionType.Rank) return;
+
+            RunOnUI_Async(() => {
+                Main_UpdatePlayersList();
             });
         }
         

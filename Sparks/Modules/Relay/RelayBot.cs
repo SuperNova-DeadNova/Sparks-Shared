@@ -6,8 +6,8 @@
     not use this file except in compliance with the Licenses. You may
     obtain a copy of the Licenses at
     
-    http://www.opensource.org/licenses/ecl2.php
-    http://www.gnu.org/licenses/gpl-3.0.html
+    https://opensource.org/license/ecl-2-0/
+    https://www.gnu.org/licenses/gpl-3.0.html
     
     Unless required by applicable law or agreed to in writing,
     software distributed under the Licenses are distributed on an "AS IS"
@@ -77,15 +77,15 @@ namespace GoldenSparks.Modules.Relay
         /// <summary> List of user IDs that all chat from is ignored </summary>
         public string[] IgnoredUsers;
         
-        readonly Player fakeGuest = new Player("RelayBot");
-        readonly Player fakeStaff = new Player("RelayBot");
-        DateTime lastWho, lastOpWho;
+        protected readonly Player fakeGuest = new Player("RelayBot");
+        protected readonly Player fakeStaff = new Player("RelayBot");
+        DateTime lastWho, lastOpWho, lastWarn;
 
-        public bool canReconnect;
-        public byte retries;
+        protected bool canReconnect;
+        protected byte retries;
         volatile Thread worker;
         /// <summary> Whether this relay bot can automatically reconnect </summary>
-        public abstract bool CanReconnect { get; }
+        protected abstract bool CanReconnect { get; }
         
         
         /// <summary> The name of the service this relay bot communicates with </summary>
@@ -95,7 +95,7 @@ namespace GoldenSparks.Modules.Relay
         /// <summary> Whether this relay bot is currently enabled </summary>
         public abstract bool Enabled { get; }
         
-        /// <summary> Wehther this relay bot is connected to the external communication service </summary>
+        /// <summary> Whether this relay bot is connected to the external communication service </summary>
         public bool Connected { get { return worker != null; } }
 
         /// <summary> List of users allowed to run in-game commands from the external communication service </summary>
@@ -108,14 +108,16 @@ namespace GoldenSparks.Modules.Relay
         
         /// <summary> Sends a message to all channels setup for general public chat </summary>
         public void SendPublicMessage(string message) {
-            foreach (string chan in Channels) {
+            foreach (string chan in Channels) 
+            {
                 SendMessage(chan, message);
             }
         }
         
         /// <summary> Sends a message to all channels setup for staff chat only </summary>
         public void SendStaffMessage(string message) {
-            foreach (string chan in OpChannels) {
+            foreach (string chan in OpChannels) 
+            {
                 SendMessage(chan, message);
             }
         }
@@ -124,19 +126,16 @@ namespace GoldenSparks.Modules.Relay
         /// <remarks> Channels can specify either group chat or direct messages </remarks>
         public void SendMessage(string channel, string message) {
             if (!Enabled || !Connected) return;
-            DoSendMessage(channel, ConvertMessage(message));
+            DoSendMessage(channel, message);
         }
-
-        /// <summary> Formats a message for displaying on the external communication service </summary>
-        /// <example> IRC converts colors such as &amp;0 into IRC color codes </example>
-        public virtual string ConvertMessage(string message) {
+        
+        protected abstract void DoSendMessage(string channel, string message);
+        
+        protected string ConvertMessageCommon(string message) {
             message = EmotesHandler.Replace(message);
             message = ChatTokens.ApplyCustom(message);
             return message;
         }
-        /// <summary> Sends a chat message to the given channel </summary>
-        /// <remarks> Assumes the message has already been formatted using ConvertMessage </remarks>
-        public abstract void DoSendMessage(string channel, string message);
         
         
         /// <summary> Attempts to connect to the external communication service </summary>
@@ -177,8 +176,8 @@ namespace GoldenSparks.Modules.Relay
             Disconnect(RelayName + " Bot resetting...");
             Connect();
         }
-
-        public void OnReady() {
+        
+        protected void OnReady() {
             Logger.Log(LogType.RelayActivity, "Connected to {0}!", RelayName);
             retries  = 0;
         }
@@ -236,10 +235,10 @@ namespace GoldenSparks.Modules.Relay
             worker.IsBackground = true;
             worker.Start();
         }
-
-        public abstract void DoConnect();
-        public abstract void DoReadLoop();
-        public abstract void DoDisconnect(string reason);
+        
+        protected abstract void DoConnect();
+        protected abstract void DoReadLoop();
+        protected abstract void DoDisconnect(string reason);
         
         
         /// <summary> Loads the list of controller users from disc </summary>
@@ -250,10 +249,10 @@ namespace GoldenSparks.Modules.Relay
             UpdateConfig();
             LoadControllers();
         }
-
-        public abstract void UpdateConfig();
-
-        public void LoadBannedCommands() {
+        
+        protected abstract void UpdateConfig();
+        
+        protected void LoadBannedCommands() {
             BannedCommands = new List<string>() { "IRCBot", "DiscordBot", "OpRules", "IRCControllers", "DiscordControllers" };
             
             if (!File.Exists("text/irccmdblacklist.txt")) {
@@ -266,16 +265,16 @@ namespace GoldenSparks.Modules.Relay
                 if (!line.IsCommentLine()) BannedCommands.Add(line);
             }
         }
-
-
-        public virtual void OnStart() {
+        
+        
+        protected virtual void OnStart() {
             OnChatEvent.Register(OnChat, Priority.Low);
             OnChatSysEvent.Register(OnChatSys, Priority.Low);
             OnChatFromEvent.Register(OnChatFrom, Priority.Low);
             OnShuttingDownEvent.Register(OnShutdown, Priority.Low);
         }
-
-        public virtual void OnStop() {
+        
+        protected virtual void OnStop() {
             OnChatEvent.Unregister(OnChat);
             OnChatSysEvent.Unregister(OnChatSys);
             OnChatFromEvent.Unregister(OnChatFrom);
@@ -296,13 +295,13 @@ namespace GoldenSparks.Modules.Relay
                 .Replace("λFULL", UnescapeFull(p))
                 .Replace("λNICK", UnescapeNick(p));
         }
-
-        public virtual string UnescapeFull(Player p) {
+        
+        protected virtual string UnescapeFull(Player p) {
             return Server.Config.IRCShowPlayerTitles ? p.FullName : p.group.Prefix + p.ColoredName;
         }
-
-        public virtual string UnescapeNick(Player p) { return p.ColoredName; }
-        public virtual string PrepareMessage(string msg) { return msg; }
+        
+        protected virtual string UnescapeNick(Player p) { return p.ColoredName; }
+        protected virtual string PrepareMessage(string msg) { return msg; }
         
         
         void MessageToRelay(ChatScope scope, string msg, object arg, ChatMessageFilter filter) {
@@ -312,10 +311,8 @@ namespace GoldenSparks.Modules.Relay
             if (scopeFilter(fakeGuest, arg) && (filter == null || filter(fakeGuest, arg))) {
                 SendPublicMessage(msg); return;
             }
-            
-            fakeStaff.group = Group.Find(Server.Config.IRCControllerRank);
-            if (fakeStaff.group == null) fakeStaff.group = Group.NobodyRank;
-            
+
+            fakeStaff.group = GetControllerRank();
             if (scopeFilter(fakeStaff, arg) && (filter == null || filter(fakeStaff, arg))) {
                 SendStaffMessage(msg);
             }
@@ -348,20 +345,20 @@ namespace GoldenSparks.Modules.Relay
         void OnShutdown(bool restarting, string message) {
             Disconnect(restarting ? "Server is restarting" : "Server is shutting down");
         }
-
-
+        
+        
         /// <summary> Simplifies some fancy characters (e.g. simplifies ” to ") </summary>
-        public void SimplifyCharacters(StringBuilder sb) {
+        protected void SimplifyCharacters(StringBuilder sb) {
             // simplify fancy quotes
             sb.Replace("“", "\"");
             sb.Replace("”", "\"");
             sb.Replace("‘", "'");
             sb.Replace("’", "'");
         }
-        public abstract string ParseMessage(string message);
-
+        protected abstract string ParseMessage(string message);
+        
         /// <summary> Handles a direct message written by the given user </summary>
-        public void HandleDirectMessage(RelayUser user, string channel, string message) {
+        protected void HandleDirectMessage(RelayUser user, string channel, string message) {
             if (IgnoredUsers.CaselessContains(user.ID)) return;
             message = ParseMessage(message).TrimEnd();
             if (message.Length == 0) return;
@@ -387,7 +384,7 @@ namespace GoldenSparks.Modules.Relay
         }
 
         /// <summary> Handles a message written by the given user on the given channel </summary>
-        public void HandleChannelMessage(RelayUser user, string channel, string message) {
+        protected void HandleChannelMessage(RelayUser user, string channel, string message) {
             if (IgnoredUsers.CaselessContains(user.ID)) return;
             message = ParseMessage(message).TrimEnd();
             if (message.Length == 0) return;
@@ -436,16 +433,16 @@ namespace GoldenSparks.Modules.Relay
             else lastWho = DateTime.UtcNow;
             return true;
         }
-
+        
         /// <summary> Outputs the list of online players to the given user </summary>
-        public virtual void MessagePlayers(RelayPlayer p) {
+        protected virtual void MessagePlayers(RelayPlayer p) {
             Command.Find("Players").Use(p, "", p.DefaultCmdData);
         }
         
                 
         bool HandleCommand(RelayUser user, string channel, string message, string[] parts) {
             string cmdName = parts.Length > 1 ? parts[1].ToLower() : "";
-            string cmdArgs = parts.Length > 2 ? parts[2] : "";
+            string cmdArgs = parts.Length > 2 ? parts[2].Trim()    : "";
             Command.Search(ref cmdName, ref cmdArgs);
             
             string error;
@@ -467,7 +464,7 @@ namespace GoldenSparks.Modules.Relay
             
             try {
                 if (!p.CanUse(cmd)) {
-                    CommandPerms.Find(cmd.name).MessageCannotUse(p);
+                    cmd.Permissions.MessageCannotUse(p);
                     return false;
                 }
                 if (!cmd.SuperUseable) {
@@ -483,10 +480,18 @@ namespace GoldenSparks.Modules.Relay
         }
 
         /// <summary> Returns whether the given relay user is allowed to execute the given command </summary>
-        public bool CanUseCommand(RelayUser user, string cmd, out string error) {
+        protected bool CanUseCommand(RelayUser user, string cmd, out string error) {
             error = null;
-            // Intentionally show no message to non-controller users to avoid spam
-            if (!Controllers.Contains(user.ID)) return false;
+
+            if (!Controllers.Contains(user.ID)) {
+                // Intentionally show no message to non-controller users to avoid spam
+                if ((DateTime.UtcNow - lastWarn).TotalSeconds <= 60) return false;
+                
+                lastWarn = DateTime.UtcNow;
+                error    = "Only " + RelayName + " Controllers are allowed to use in-game commands from " + RelayName;
+                return false;
+            }
+            
             // Make sure controller is actually allowed to execute commands right now
             if (!CheckController(user.ID, ref error)) return false;
 
@@ -496,33 +501,44 @@ namespace GoldenSparks.Modules.Relay
             }
             return true;
         }
-
+        
         /// <summary> Returns whether the given controller is currently allowed to execute commands </summary>
         /// <remarks> e.g. a user may have to login before they are allowed to execute commands </remarks>
-        public abstract bool CheckController(string userID, ref string error);
+        protected abstract bool CheckController(string userID, ref string error);
 
-        public sealed class RelayPlayer : Player {
+        protected Group GetControllerRank() {
+            LevelPermission perm = Server.Config.IRCControllerRank;
+
+            // find highest rank <= IRC controller rank
+            for (int i = Group.GroupList.Count - 1; i >= 0; i--)
+            {
+                Group grp = Group.GroupList[i];
+                if (grp.Permission <= perm) return grp;
+            }
+            return Group.DefaultRank;
+        }
+        
+        protected sealed class RelayPlayer : Player {
             public readonly string ChannelID;
             public readonly RelayUser User;
             public readonly RelayBot Bot;
             
             public RelayPlayer(string channel, RelayUser user, RelayBot bot) : base(bot.RelayName) {
-                group = Group.Find(Server.Config.IRCControllerRank);
-                if (group == null) group = Group.NobodyRank;
-                
+                group = bot.GetControllerRank();
+
                 ChannelID = channel;
                 User    = user;
                 color   = "&a";
                 Bot     = bot;
                 
                 if (user != null) {
-                    string nick = "(" + bot.RelayName + user.Nick + ")";
+                    string nick = "(" + bot.RelayName + " " + user.Nick + ")";
                     DatabaseID = NameConverter.InvalidNameID(nick);
                 }
                 SuperName = bot.RelayName;
             }
             
-            public override void Message(byte type, string message) {
+            public override void Message(string message) {
                 Bot.SendMessage(ChannelID, message);
             }
         }

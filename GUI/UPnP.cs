@@ -1,11 +1,11 @@
 /*
-Copyright 2012 GoldenSparks
+Copyright 2012 MCForge
 Dual-licensed under the Educational Community License, Version 2.0 and
 the GNU General Public License, Version 3 (the "Licenses"); you may
 not use this file except in compliance with the Licenses. You may
 obtain a copy of the Licenses at
-http://www.opensource.org/licenses/ecl2.php
-http://www.gnu.org/licenses/gpl-3.0.html
+https://opensource.org/license/ecl-2-0/
+https://www.gnu.org/licenses/gpl-3.0.html
 Unless required by applicable law or agreed to in writing,
 software distributed under the Licenses are distributed on an "AS IS"
 BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
@@ -20,18 +20,21 @@ using System.Text;
 using System.Threading;
 using System.Xml;
 using GoldenSparks.Network;
-//This upnp class comes from http://www.codeproject.com/Articles/27992/NAT-Traversal-with-UPnP-in-C, Modified for use with GoldenSparks
+//This upnp class comes from http://www.codeproject.com/Articles/27992/NAT-Traversal-with-UPnP-in-C, Modified for use with MCForge
 // Some relatively straightforward documentation on how UPnP works:
 //  http://www.upnp-hacks.org/upnp.html
 //  http://www.upnp-hacks.org/igd.html
 
 namespace GoldenSparks 
 {
-    public static class UPnP 
+    public class UPnP
     {
-        public static TimeSpan Timeout = TimeSpan.FromSeconds(3);
+        public static TimeSpan Timeout   = TimeSpan.FromSeconds(3);
+        public const string TCP_PROTOCOL = "TCP";
         
-        const string req = 
+        public Action<string> Log;
+        
+        const string SEARCH_REQUEST = 
             "M-SEARCH * HTTP/1.1\r\n" +
             "HOST: 239.255.255.250:1900\r\n" +
             "ST:upnp:rootdevice\r\n" +
@@ -39,21 +42,21 @@ namespace GoldenSparks
             "MX:3\r\n" +
             "\r\n";
 
-        static string _serviceUrl;
-        static List<string> visitedLocations = new List<string>();
+        string _serviceUrl;
+        List<string> visitedLocations = new List<string>();
         
         
-        public static bool Discover() {
+        public bool Discover() {
             Socket s = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             s.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, 1);
             
-            byte[] data   = Encoding.ASCII.GetBytes(req);
+            byte[] data   = Encoding.ASCII.GetBytes(SEARCH_REQUEST);
             IPEndPoint ep = new IPEndPoint(IPAddress.Broadcast, 1900);
             byte[] buffer = new byte[0x1000];
 
             s.ReceiveTimeout = 3000;
-            visitedLocations.Clear();           
-            Logger.Log(LogType.BackgroundActivity, "Searching for UPnP devices..");
+            visitedLocations.Clear();
+            Log("Searching for UPnP supporting routers..");
             DateTime end  = DateTime.UtcNow.Add(Timeout);
             
             try {
@@ -62,7 +65,7 @@ namespace GoldenSparks
                     s.SendTo(data, ep);
                     s.SendTo(data, ep);
                     s.SendTo(data, ep);
-			    
+                
                     int length = -1;
                     do {
                         length = s.Receive(buffer);
@@ -74,10 +77,14 @@ namespace GoldenSparks
                             
                             if (!visitedLocations.Contains(location)) {
                                 visitedLocations.Add(location);
-                                Logger.Log(LogType.BackgroundActivity, "UPnP device found: " + location);
+                                //Log("Found UPnP device: " + location);
+                                Log("  Found: " + location);
                                 
                                 _serviceUrl = GetServiceUrl(location);
-                                if (!String.IsNullOrEmpty(_serviceUrl)) return true;
+                                if (String.IsNullOrEmpty(_serviceUrl)) continue;
+                                
+                                Log("  Service URL: " + _serviceUrl);
+                                return true;
                             }
                         }
                     } while (length > 0);
@@ -85,43 +92,47 @@ namespace GoldenSparks
             } catch (Exception ex) {
                 Logger.LogError("Error discovering UPnP devices", ex);
             }
+            
+            Log("No UPnP supporting routers found");
             return false;
         }
 
-        public static void ForwardPort(int port, ProtocolType protocol, string description) {
-            if (String.IsNullOrEmpty(_serviceUrl) )
+        public void ForwardPort(int port, string protocol, string description) {
+            if (String.IsNullOrEmpty(_serviceUrl))
                 throw new InvalidOperationException("No UPnP service available or Discover() has not been called");
             
             string xdoc = SOAPRequest(_serviceUrl, "AddPortMapping",
                 "<u:AddPortMapping xmlns:u=\"urn:schemas-upnp-org:service:WANIPConnection:1\">" +
                 "<NewRemoteHost></NewRemoteHost>" +
                 "<NewExternalPort>" + port + "</NewExternalPort>" +
-                "<NewProtocol>" + protocol.ToString().ToUpper() + "</NewProtocol>" +
+                "<NewProtocol>" + protocol + "</NewProtocol>" +
                 "<NewInternalPort>" + port + "</NewInternalPort>" +
                 "<NewInternalClient>" + GetLocalIP() + "</NewInternalClient>" +
                 "<NewEnabled>1</NewEnabled>" +
                 "<NewPortMappingDescription>" + description + "</NewPortMappingDescription>" +
                 "<NewLeaseDuration>0</NewLeaseDuration>" +
                 "</u:AddPortMapping>");
+            Log("Forwarded port " + port);
         }
 
-        public static void DeleteForwardingRule(int port, ProtocolType protocol) {
-            if (String.IsNullOrEmpty(_serviceUrl) )
+        public void DeleteForwardingRule(int port, string protocol) {
+            if (String.IsNullOrEmpty(_serviceUrl))
                 throw new InvalidOperationException("No UPnP service available or Discover() has not been called");
             
             string xdoc = SOAPRequest(_serviceUrl, "DeletePortMapping",
                 "<u:DeletePortMapping xmlns:u=\"urn:schemas-upnp-org:service:WANIPConnection:1\">" +
                 "<NewRemoteHost></NewRemoteHost>" +
                 "<NewExternalPort>" + port + "</NewExternalPort>" +
-                "<NewProtocol>" + protocol.ToString().ToUpper() + "</NewProtocol>" +
+                "<NewProtocol>" + protocol + "</NewProtocol>" +
                 "</u:DeletePortMapping>");
+            Log("Un-forwarded port " + port);
         }
         
 
         static string GetServiceUrl(string location) {
             try {
                 XmlDocument doc = new XmlDocument();
-                WebRequest request = WebRequest.CreateDefault(new Uri(location));
+                WebRequest request = WebRequest.Create(location);
                 doc.Load(request.GetResponse().GetResponseStream());
                 
                 XmlNamespaceManager nsMgr = new XmlNamespaceManager(doc.NameTable);
@@ -140,6 +151,7 @@ namespace GoldenSparks
                 if (node != null) return CombineUrls(location, node.Value);
 
             } catch (Exception ex) {
+                HttpUtil.DisposeErrorResponse(ex);
                 Logger.LogError("Error getting UPnP device service URL", ex);
             }
             return null;
@@ -171,7 +183,7 @@ namespace GoldenSparks
                 "<s:Body>" + soap + "</s:Body>" +
                 "</s:Envelope>";
             
-            WebRequest r = HttpWebRequest.Create(url);
+            WebRequest r = WebRequest.Create(url);
             r.Method = "POST";            
             r.Headers.Add("SOAPACTION", "\"urn:schemas-upnp-org:service:WANIPConnection:1#" + function + "\"");
             r.ContentType = "text/xml; charset=\"utf-8\"";

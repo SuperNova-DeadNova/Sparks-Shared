@@ -1,13 +1,13 @@
 /*
-    Copyright 2010 MCSharp team (Modified for use with MCZall/MCLawl/GoldenSparks)
+    Copyright 2010 MCSharp team (Modified for use with MCZall/MCLawl/MCForge)
     
     Dual-licensed under the Educational Community License, Version 2.0 and
     the GNU General Public License, Version 3 (the "Licenses"); you may
     not use this file except in compliance with the Licenses. You may
     obtain a copy of the Licenses at
     
-    http://www.opensource.org/licenses/ecl2.php
-    http://www.gnu.org/licenses/gpl-3.0.html
+    https://opensource.org/license/ecl-2-0/
+    https://www.gnu.org/licenses/gpl-3.0.html
     
     Unless required by applicable law or agreed to in writing,
     software distributed under the Licenses are distributed on an "AS IS"
@@ -18,21 +18,20 @@
 using System;
 using System.Collections.Generic;
 using GoldenSparks.Core;
+using GoldenSparks.Modules.Games.Countdown;
+using GoldenSparks.Modules.Games.CTF;
+using GoldenSparks.Modules.Games.LS;
+using GoldenSparks.Modules.Games.TW;
+using GoldenSparks.Modules.Games.ZS;
 using GoldenSparks.Modules.Moderation.Notes;
 using GoldenSparks.Modules.Relay.Discord;
 using GoldenSparks.Modules.Relay.IRC;
-using GoldenSparks.Modules.Relay1.Discord1;
-using GoldenSparks.Modules.Relay1.IRC1;
-using GoldenSparks.Modules.Relay2.Discord2;
-using GoldenSparks.Modules.Relay2.IRC2;
-using GoldenSparks.Modules.GlobalRelay.GlobalDiscord;
-using GoldenSparks.Modules.GlobalRelay.GlobalIRC;
 using GoldenSparks.Modules.Security;
 using GoldenSparks.Scripting;
 
 namespace GoldenSparks 
 {
-    /// <summary> This class provides for more advanced modification to GoldenSparks </summary>
+    /// <summary> This class provides for more advanced modification to MCGalaxy </summary>
     public abstract class Plugin 
     {
         /// <summary> Hooks into events and initalises states/resources etc </summary>
@@ -51,8 +50,8 @@ namespace GoldenSparks
         
         /// <summary> Name of the plugin. </summary>
         public abstract string name { get; }
-        /// <summary> Oldest version of GoldenSparks this plugin is compatible with. </summary>
-        public abstract string GoldenSparks_Version { get; }
+        /// <summary> The oldest version of MCGalaxy this plugin is compatible with. </summary>
+        public virtual string GoldenSparks_Version { get { return null; } }
         /// <summary> Version of this plugin. </summary>
         public virtual int build { get { return 0; } }
         /// <summary> Message to display once this plugin is loaded. </summary>
@@ -63,51 +62,73 @@ namespace GoldenSparks
         public virtual bool LoadAtStartup { get { return true; } }
         
         
-        internal static List<Plugin> core = new List<Plugin>();
-        public static List<Plugin> all = new List<Plugin>();
+        /// <summary> List of plugins/modules included in the server software </summary>
+        public static List<Plugin> core   = new List<Plugin>();
+        public static List<Plugin> custom = new List<Plugin>();
         
-        public static bool Load(Plugin p, bool auto) {
+        public static Plugin FindCustom(string name) {
+            foreach (Plugin pl in custom) 
+            {
+                if (pl.name.CaselessEq(name)) return pl;
+            }
+            return null;
+        }
+        
+        
+        public static void Load(Plugin pl, bool auto) {
+            string ver = pl.GoldenSparks_Version;
+            if (!String.IsNullOrEmpty(ver) && new Version(ver) > new Version(Server.Version)) {
+                string msg = string.Format("Plugin '{0}' requires a more recent version of {1}!", pl.name, Server.SoftwareName);
+                throw new InvalidOperationException(msg);
+            }
+            
             try {
-                string ver = p.GoldenSparks_Version;
-                if (!string.IsNullOrEmpty(ver) && new Version(ver) > new Version(Server.Version)) {
-                    Logger.Log(LogType.Warning, "Plugin ({0}) requires a more recent version of {1}!", p.name, Server.SoftwareName);
-                    return false;
-                }
-                all.Add(p);
+                custom.Add(pl);
                 
-                if (p.LoadAtStartup || !auto) {
-                    p.Load(auto);
-                    Logger.Log(LogType.SystemActivity, "Plugin {0} loaded...build: {1}", p.name, p.build);
+                if (pl.LoadAtStartup || !auto) {
+                    pl.Load(auto);
+                    Logger.Log(LogType.SystemActivity, "Plugin {0} loaded...build: {1}", pl.name, pl.build);
                 } else {
-                    Logger.Log(LogType.SystemActivity, "Plugin {0} was not loaded, you can load it with /pload", p.name);
+                    Logger.Log(LogType.SystemActivity, "Plugin {0} was not loaded, you can load it with /pload", pl.name);
                 }
                 
-                if (!string.IsNullOrEmpty(p.welcome)) Logger.Log(LogType.SystemActivity, p.welcome);
+                if (!String.IsNullOrEmpty(pl.welcome)) Logger.Log(LogType.SystemActivity, pl.welcome);
+            } catch {           
+                if (!String.IsNullOrEmpty(pl.creator)) Logger.Log(LogType.Warning, "You can go bug {0} about {1} failing to load.", pl.creator, pl.name);
+                throw;
+            }
+        }
+
+        public static bool Unload(Plugin pl) {
+            bool success = UnloadPlugin(pl, false);
+            
+            // TODO only remove if successful?
+            custom.Remove(pl);
+            core.Remove(pl);
+            return success;
+        }
+        
+        static bool UnloadPlugin(Plugin pl, bool auto) {
+            try {
+                pl.Unload(auto);
                 return true;
             } catch (Exception ex) {
-                Logger.LogError("Error loading plugin " + p.name, ex);               
-                if (!string.IsNullOrEmpty(p.creator)) Logger.Log(LogType.Warning, "You can go bug {0} about it.", p.creator);
+                Logger.LogError("Error unloading plugin " + pl.name, ex);
                 return false;
             }
         }
 
-        public static bool Unload(Plugin p, bool auto) {
-            bool success = true;
-            try {
-                p.Unload(auto);
-                Logger.Log(LogType.SystemActivity, "Plugin {0} was unloaded.", p.name);
-            } catch (Exception ex) {
-                Logger.LogError("Error unloading plugin " + p.name, ex);
-                success = false;
-            }
-            
-            all.Remove(p);
-            return success;
-        }
-
+        
         public static void UnloadAll() {
-            for (int i = 0; i < all.Count; i++) {
-                Unload(all[i], true); i--;
+            for (int i = 0; i < custom.Count; i++) 
+            {
+                UnloadPlugin(custom[i], true);
+            }
+            custom.Clear();
+            
+            for (int i = 0; i < core.Count; i++) 
+            {
+                UnloadPlugin(core[i], true);
             }
         }
 
@@ -116,22 +137,23 @@ namespace GoldenSparks
             LoadCorePlugin(new NotesPlugin());
             LoadCorePlugin(new DiscordPlugin());
             LoadCorePlugin(new IRCPlugin());
-            LoadCorePlugin(new DiscordPlugin1());
-            LoadCorePlugin(new IRCPlugin1());
-            LoadCorePlugin(new DiscordPlugin2());
-            LoadCorePlugin(new IRCPlugin2());
-            LoadCorePlugin(new GlobalDiscordPlugin());
-            LoadCorePlugin(new GlobalIRCPlugin());
-            LoadCorePlugin(new HelloWorld());
             LoadCorePlugin(new IPThrottler());
+            
+            LoadCorePlugin(new CountdownPlugin());
+            LoadCorePlugin(new CTFPlugin());
+            LoadCorePlugin(new LSPlugin());
+            LoadCorePlugin(new TWPlugin());
+            LoadCorePlugin(new ZSPlugin());
+            
             IScripting.AutoloadPlugins();
         }
         
         static void LoadCorePlugin(Plugin plugin) {
+            List<string> disabled = Server.Config.DisabledModules;
+            if (disabled.CaselessContains(plugin.name)) return;
+            
             plugin.Load(true);
-            all.Add(plugin);
-            core.Add(plugin);
+            Plugin.core.Add(plugin);
         }
     }
 }
-

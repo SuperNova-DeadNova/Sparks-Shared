@@ -1,13 +1,13 @@
 ﻿/*
-    Copyright 2015 GoldenSparks
+    Copyright 2015 MCGalaxy
         
     Dual-licensed under the Educational Community License, Version 2.0 and
     the GNU General Public License, Version 3 (the "Licenses"); you may
     not use this file except in compliance with the Licenses. You may
     obtain a copy of the Licenses at
     
-    http://www.opensource.org/licenses/ecl2.php
-    http://www.gnu.org/licenses/gpl-3.0.html
+    https://opensource.org/license/ecl-2-0/
+    https://www.gnu.org/licenses/gpl-3.0.html
     
     Unless required by applicable law or agreed to in writing,
     software distributed under the Licenses are distributed on an "AS IS"
@@ -20,13 +20,14 @@ using System.Collections.Generic;
 using GoldenSparks.Blocks;
 using BlockID = System.UInt16;
 
-namespace GoldenSparks {
-    public static partial class Block {
-        
-        public static BlockProps[] Props = new BlockProps[Block.ExtendedCount];
+namespace GoldenSparks 
+{
+    public static partial class Block 
+    {        
+        public static BlockProps[] Props = new BlockProps[Block.SUPPORTED_COUNT];
         public static Dictionary<string, byte> Aliases = new Dictionary<string, byte>();
-
-        public static BlockProps MakeDefaultProps(BlockID b) {
+        
+        internal static BlockProps MakeDefaultProps(BlockID b) {
             BlockProps props = BlockProps.MakeEmpty();
             if ((b >= Op_Glass && b <= Op_Lava) || b == Invalid || b == RocketStart || b == Bedrock) {
                 props.OPBlock = true;
@@ -134,7 +135,7 @@ namespace GoldenSparks {
             return null;
         }
 
-        public static void SetDefaultNames() {
+        internal static void SetDefaultNames() {
             Aliases.Clear();
             SetDefaultAliases();
             int start = 0;
@@ -174,7 +175,7 @@ const string default_names =
     "Blue_Bird@@Killer_Phoenix@@@GoldFish@Sea_Sponge@Shark@" +
     "Salmon@Betta_Fish@Lava_Shark@Snake@Snake_Tail@Door_Gold@@@";
     
-            for (int b = 0; b < Block.Count; b++) {
+            for (int b = 0; b < Block.CORE_COUNT; b++) {
                 int end = default_names.IndexOf('@', start);
                 string name = start == end ? "unknown" : default_names.Substring(start, end - start);
                 start = end + 1;
@@ -195,7 +196,7 @@ const string default_names =
         
         static void SetDefaultAliases() {
             Dictionary<string, byte> aliases = Aliases;
-            // Add old GoldenSparks names
+            // Add old MCGalaxy names
             aliases["purple"] = Indigo; aliases["blueviolet"] = Blue;
             aliases["adminium"] = Bedrock; aliases["bookcase"] = Bookshelf;
             aliases["plant"] = Sapling; aliases["mossy_cobblestone"] = MossyRocks;

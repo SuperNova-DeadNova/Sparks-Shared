@@ -1,13 +1,13 @@
 ﻿/*
-    Copyright 2015 GoldenSparks
+    Copyright 2015 MCGalaxy
     
     Dual-licensed under the Educational Community License, Version 2.0 and
     the GNU General Public License, Version 3 (the "Licenses"); you may
     not use this file except in compliance with the Licenses. You may
     obtain a copy of the Licenses at
     
-    http://www.opensource.org/licenses/ecl2.php
-    http://www.gnu.org/licenses/gpl-3.0.html
+    https://opensource.org/license/ecl-2-0/
+    https://www.gnu.org/licenses/gpl-3.0.html
     
     Unless required by applicable law or agreed to in writing,
     software distributed under the Licenses are distributed on an "AS IS"
@@ -134,7 +134,7 @@ namespace GoldenSparks {
         static void SetUnload(Player p, Level l, string v) { Toggle(p, l, ref l.Config.AutoUnload, "Auto unload"); }
         static void SetGoto(Player p,   Level l, string v) { Toggle(p, l, ref l.Config.LoadOnGoto, "Load on goto"); }
         static void SetDecay(Player p,  Level l, string v) { Toggle(p, l, ref l.Config.LeafDecay, "Leaf decay"); }
-        static void SetFlow(Player p,   Level l, string v) { Toggle(p, l, ref l.Config.RandomFlow, "Sparks flow"); }
+        static void SetFlow(Player p,   Level l, string v) { Toggle(p, l, ref l.Config.RandomFlow, "Random flow"); }
         static void SetTrees(Player p,  Level l, string v) { Toggle(p, l, ref l.Config.GrowTrees, "Tree growing"); }
         static void SetBuildable(Player p, Level l, string v) { TogglePerms(p, l, ref l.Config.Buildable, "Buildable"); }
         static void SetDeletable(Player p, Level l, string v) { TogglePerms(p, l, ref l.Config.Deletable, "Deletable"); }

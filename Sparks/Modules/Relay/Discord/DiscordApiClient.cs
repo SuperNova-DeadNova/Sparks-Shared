@@ -1,13 +1,13 @@
 ﻿/*
-    Copyright 2015 GoldenSparks
+    Copyright 2015 MCGalaxy
         
     Dual-licensed under the Educational Community License, Version 2.0 and
     the GNU General Public License, Version 3 (the "Licenses"); you may
     not use this file except in compliance with the Licenses. You may
     obtain a copy of the Licenses at
     
-    http://www.opensource.org/licenses/ecl2.php
-    http://www.gnu.org/licenses/gpl-3.0.html
+    https://opensource.org/license/ecl-2-0/
+    https://www.gnu.org/licenses/gpl-3.0.html
     
     Unless required by applicable law or agreed to in writing,
     software distributed under the Licenses are distributed on an "AS IS"
@@ -61,12 +61,12 @@ namespace GoldenSparks.Modules.Relay.Discord
             {
                 { "parse", Allowed ?? default_allowed }
             };
-            JsonObject obj = new JsonObject()
+
+            return new JsonObject()
             {
                 { "content", content.ToString() },
                 { "allowed_mentions", allowed }
             };
-            return obj;
         }
         
         public override bool CombineWith(DiscordApiMessage prior) {
@@ -108,13 +108,16 @@ namespace GoldenSparks.Modules.Relay.Discord
         }
         
         public override JsonObject ToJson() {
-            JsonObject obj = new JsonObject()
+            return new JsonObject()
             {
-                { "embed", new JsonObject()
+                { "embeds", new JsonArray()
                     {
-                        { "title", Title },
-                        { "color", Color },
-                        { "fields", GetFields() }
+                        new JsonObject()
+                        {
+                            { "title", Title },
+                            { "color", Color },
+                            { "fields", GetFields() }
+                        }
                     }
                 },
                 // no pinging anything
@@ -124,38 +127,37 @@ namespace GoldenSparks.Modules.Relay.Discord
                     }
                 }
             };
-            return obj;
         }
     }
     
     /// <summary> Implements a basic web client for sending messages to the Discord API </summary>
     /// <remarks> https://discord.com/developers/docs/reference </remarks>
     /// <remarks> https://discord.com/developers/docs/resources/channel#create-message </remarks>
-    public sealed class DiscordApiClient : RelayBotSender<DiscordApiMessage>
+    public sealed class DiscordApiClient : AsyncWorker<DiscordApiMessage>
     {
         public string Token;
-        const string host = "https://discord.com/api/v8";
+        const string host = "https://discord.com/api/v10";
         
         DiscordApiMessage GetNextRequest() {
-            if (requests.Count == 0) return null;
-            DiscordApiMessage first = requests.Dequeue();
+            if (queue.Count == 0) return null;
+            DiscordApiMessage first = queue.Dequeue();
             
             // try to combine messages to minimise API calls
-            while (requests.Count > 0) {
-                DiscordApiMessage next = requests.Peek();
+            while (queue.Count > 0) {
+                DiscordApiMessage next = queue.Peek();
                 if (!next.CombineWith(first)) break;
-                requests.Dequeue();
+                queue.Dequeue();
             }
             return first;
         }
-
-        public override string ThreadName { get { return "Discord-ApiClient"; } }
-        public override void HandleNext() {
+        
+        protected override string ThreadName { get { return "Discord-ApiClient"; } }
+        protected override void HandleNext() {
             DiscordApiMessage msg = null;
             WebResponse res = null;
             
-            lock (reqLock)   { msg = GetNextRequest(); }
-            if (msg == null) { WaitForWork(); return; }
+            lock (queueLock) { msg = GetNextRequest(); }
+            if (msg == null) { WaitForWork(); return;  }
             
             for (int retry = 0; retry < 10; retry++) 
             {
@@ -234,6 +236,11 @@ namespace GoldenSparks.Modules.Relay.Discord
         
         static void LogResponse(string err) {
             if (string.IsNullOrEmpty(err)) return;
+            
+            // Discord sometimes returns <html>..</html> responses for internal server errors
+            //  most of this is useless content, so just truncate these particular errors 
+            if (err.Length > 200) err = err.Substring(0, 200) + "...";
+            
             Logger.Log(LogType.Warning, "Discord API returned: " + err);
         }
         

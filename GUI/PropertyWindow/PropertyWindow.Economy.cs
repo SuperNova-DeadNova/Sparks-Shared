@@ -1,13 +1,13 @@
 ﻿/*
-    Copyright 2011 GoldenSparks
+    Copyright 2011 MCForge
         
     Dual-licensed under the Educational Community License, Version 2.0 and
     the GNU General Public License, Version 3 (the "Licenses"); you may
     not use this file except in compliance with the Licenses. You may
     obtain a copy of the Licenses at
     
-    http://www.opensource.org/licenses/ecl2.php
-    http://www.gnu.org/licenses/gpl-3.0.html
+    https://opensource.org/license/ecl-2-0/
+    https://www.gnu.org/licenses/gpl-3.0.html
     
     Unless required by applicable law or agreed to in writing,
     software distributed under the Licenses are distributed on an "AS IS"
@@ -36,8 +36,8 @@ namespace GoldenSparks.Gui {
             }
             eco_cmbCfg.Items.Add("(none)");
             eco_cmbCfg.SelectedIndex = eco_cmbCfg.Items.Count - 1;
-            
-            eco_cmbItemRank.Items.AddRange(GuiPerms.RankNames);
+
+            GuiPerms.SetRanks(eco_cmbItemRank);
             eco_colRankPrice.CellTemplate = new NumericalCell();
             eco_dgvRanks.DataError += eco_dgv_DataError;
 
@@ -137,7 +137,7 @@ namespace GoldenSparks.Gui {
             eco_numItemPrice.Value = eco_curItem.Price;
             Eco_UpdateItemEnables();
             
-            GuiPerms.SetDefaultIndex(eco_cmbItemRank, eco_curItem.PurchaseRank);
+            GuiPerms.SetSelectedRank(eco_cmbItemRank, eco_curItem.PurchaseRank);
         }
         
         void eco_cbItem_CheckedChanged(object sender, EventArgs e) {
@@ -151,7 +151,9 @@ namespace GoldenSparks.Gui {
         
         void eco_cmbItemRank_SelectedIndexChanged(object sender, EventArgs e) {
             const LevelPermission perm = LevelPermission.Guest;
-            eco_curItem.PurchaseRank = GuiPerms.GetPermission(eco_cmbItemRank, perm);
+            if (eco_curItem == null) return;
+
+            eco_curItem.PurchaseRank = GuiPerms.GetSelectedRank(eco_cmbItemRank, perm);
         }
 
         
@@ -161,10 +163,13 @@ namespace GoldenSparks.Gui {
         
         void Eco_UpdateRanks() {
             eco_dgvRanks.Rows.Clear();
-            for (int i = 0; i < GuiPerms.RankPerms.Length; i++) {
-                RankItem.RankEntry rank = Economy.Ranks.Find(GuiPerms.RankPerms[i]);
+            foreach (Group grp in Group.GroupList)
+            {
+                RankItem.RankEntry rank = Economy.Ranks.Find(grp.Permission);
                 int price = rank == null ? 0 : rank.Price;
-                eco_dgvRanks.Rows.Add(GuiPerms.RankNames[i], price);
+
+                int idx = eco_dgvRanks.Rows.Add(grp.Name, price);
+                eco_dgvRanks.Rows[idx].Tag = grp.Permission;
             } 
             
             Eco_UpdateRankEnables();
@@ -186,31 +191,30 @@ namespace GoldenSparks.Gui {
         
         void eco_dgvRanks_CellValueChanged(object sender, DataGridViewCellEventArgs e) {
             if (e.RowIndex == -1) return;
-            object name  = eco_dgvRanks.Rows[e.RowIndex].Cells[0].Value;
-            object price = eco_dgvRanks.Rows[e.RowIndex].Cells[1].Value;
+            DataGridViewRow row = eco_dgvRanks.Rows[e.RowIndex];
+            object price        = row.Cells[1].Value;
             
             // On Mono this event is raised during initialising cells too
             // However, first time event is raised, price is not initialised yet
             if (price == null) return;
+            LevelPermission perm = (LevelPermission)row.Tag;
             
-            Group grp = Group.Find(name.ToString());
-            if (grp == null) return; // TODO: does this ever happen?
-            
-            RankItem.RankEntry rank = Economy.Ranks.GetOrAdd(grp.Permission);
+            RankItem.RankEntry rank = Economy.Ranks.GetOrAdd(perm);
             rank.Price = int.Parse(price.ToString());
-            if (rank.Price == 0) Economy.Ranks.Remove(grp.Permission);
+            if (rank.Price == 0) Economy.Ranks.Remove(perm);
         }
 
         
         void Eco_UpdateLevelEnables() {
-            eco_dgvMaps.Enabled    = eco_cbLvl.Checked;
-            eco_btnLvlAdd.Enabled  = eco_cbLvl.Checked;
-            eco_btnLvlDel.Enabled  = eco_cbLvl.Checked;
+            eco_dgvMaps.Enabled   = eco_cbLvl.Checked;
+            eco_btnLvlAdd.Enabled = eco_cbLvl.Checked;
+            eco_btnLvlDel.Enabled = eco_cbLvl.Checked;
         }
         
         void Eco_UpdateLevels() {
             eco_dgvMaps.Rows.Clear();
-            foreach (LevelItem.LevelPreset p in Economy.Levels.Presets) {
+            foreach (LevelItem.LevelPreset p in Economy.Levels.Presets) 
+            {
                 eco_dgvMaps.Rows.Add(p.name, p.price, p.x, p.y, p.z, p.type);
             }
             Eco_UpdateLevelEnables();
@@ -223,7 +227,8 @@ namespace GoldenSparks.Gui {
         
         void eco_dgvMaps_Apply() {
             List<LevelItem.LevelPreset> presets = new List<LevelItem.LevelPreset>();
-            foreach (DataGridViewRow row in eco_dgvMaps.Rows) {
+            foreach (DataGridViewRow row in eco_dgvMaps.Rows) 
+            {
                 LevelItem.LevelPreset p = new LevelItem.LevelPreset();
                 
                 p.name  = row.Cells[0].Value.ToString();

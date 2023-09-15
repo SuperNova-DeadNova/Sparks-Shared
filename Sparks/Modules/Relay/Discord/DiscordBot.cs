@@ -1,13 +1,13 @@
 ﻿/*
-    Copyright 2015 GoldenSparks
+    Copyright 2015 MCGalaxy
         
     Dual-licensed under the Educational Community License, Version 2.0 and
     the GNU General Public License, Version 3 (the "Licenses"); you may
     not use this file except in compliance with the Licenses. You may
     obtain a copy of the Licenses at
     
-    http://www.opensource.org/licenses/ecl2.php
-    http://www.gnu.org/licenses/gpl-3.0.html
+    https://opensource.org/license/ecl-2-0/
+    https://www.gnu.org/licenses/gpl-3.0.html
     
     Unless required by applicable law or agreed to in writing,
     software distributed under the Licenses are distributed on an "AS IS"
@@ -19,11 +19,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Threading;
 using GoldenSparks.Config;
-using GoldenSparks.Events.GroupEvents;
 using GoldenSparks.Events.PlayerEvents;
-using GoldenSparks.Events.ServerEvents;
+using GoldenSparks.Games;
+using GoldenSparks.Tasks;
 using GoldenSparks.Util;
 
 namespace GoldenSparks.Modules.Relay.Discord 
@@ -49,18 +48,18 @@ namespace GoldenSparks.Modules.Relay.Discord
         public DiscordConfig Config;
         
         TextFile replacementsFile = new TextFile("text/discord/replacements.txt",
-                                        "// This file is used to replace words/phrases sent to discord",
+                                        "// This file is used to replace words/phrases sent to Discord",
                                         "// Lines starting with // are ignored",
                                         "// Lines should be formatted like this:",
                                         "// example:http://example.org",
-                                        "// That would replace 'example' in messages sent with 'http://example.org'");
-
-
-        public override bool CanReconnect {
+                                        "// That would replace 'example' in messages sent to Discord with 'http://example.org'");
+        
+        
+        protected override bool CanReconnect {
             get { return canReconnect && (socket == null || socket.CanReconnect); }
         }
-
-        public override void DoConnect() {
+        
+        protected override void DoConnect() {
             socket = new DiscordWebsocket();
             socket.Session   = session;
             socket.Token     = Config.BotToken;
@@ -91,8 +90,8 @@ namespace GoldenSparks.Modules.Relay.Discord
             // TODO can we ever get an IOException wrapping an IOException?
             return null;
         }
-
-        public override void DoReadLoop() {
+        
+        protected override void DoReadLoop() {
             try {
                 socket.ReadLoop();
             } catch (Exception ex) {
@@ -104,23 +103,28 @@ namespace GoldenSparks.Modules.Relay.Discord
                 throw;
             }
         }
-
-        public override void DoDisconnect(string reason) {
+        
+        protected override void DoDisconnect(string reason) {
             try {
                 socket.Disconnect();
             } catch {
                 // no point logging disconnect failures
             }
         }
-
-
+        
+        
         public override void ReloadConfig() {
             Config.Load();
             base.ReloadConfig();
             LoadReplacements();
+            
+            if (!Config.CanMentionHere) return;
+            Logger.Log(LogType.Warning, "can-mention-everyone option is enabled in {0}, " +
+                       "which allows pinging all users on Discord from in-game. " +
+                       "It is recommended that this option be disabled.", DiscordConfig.PROPS_PATH);
         }
-
-        public override void UpdateConfig() {
+        
+        protected override void UpdateConfig() {
             Channels     = Config.Channels.SplitComma();
             OpChannels   = Config.OpChannels.SplitComma();
             IgnoredUsers = Config.IgnoredUsers.SplitComma();
@@ -169,14 +173,21 @@ namespace GoldenSparks.Modules.Relay.Discord
             return raw as string;
         }
         
+        string GetUser(JsonObject author) {
+            // User's chosen display name (configurable)
+            object name = null;
+            author.TryGetValue("global_name", out name);
+            if (name != null) return (string)name;
+
+            return (string)author["username"];
+        }
+        
         RelayUser ExtractUser(JsonObject data) {
             JsonObject author = (JsonObject)data["author"];
-            string channel    = (string)data["channel_id"];
-            string message    = (string)data["content"];
             
             RelayUser user = new RelayUser();
-            user.Nick = GetNick(data) ?? (string)author["username"];
-            user.ID   =                  (string)author["id"];
+            user.Nick = GetNick(data) ?? GetUser(author);
+            user.ID   = (string)author["id"];
             return user;
         }
 
@@ -197,15 +208,15 @@ namespace GoldenSparks.Modules.Relay.Discord
             OnReady();
         }
         
-        void PrintAttachments(JsonObject data, string channel) {
+        void PrintAttachments(RelayUser user, JsonObject data, string channel) {
             object raw;
             if (!data.TryGetValue("attachments", out raw)) return;
             
             JsonArray list = raw as JsonArray;
             if (list == null) return;
-            RelayUser user = ExtractUser(data);
             
-            foreach (object entry in list) {
+            foreach (object entry in list) 
+            {
                 JsonObject attachment = entry as JsonObject;
                 if (attachment == null) continue;
                 
@@ -243,7 +254,7 @@ namespace GoldenSparks.Modules.Relay.Discord
                 HandleDirectMessage(user, channel, message);
             } else {
                 HandleChannelMessage(user, channel, message);
-                PrintAttachments(data, channel);
+                PrintAttachments(user, data, channel);
             }
         }
         
@@ -276,8 +287,8 @@ namespace GoldenSparks.Modules.Relay.Discord
             // To match Discord: \a --> \a, \* --> *
             return (c >  ' ' && c <= '/') || (c >= ':' && c <= '@') 
                 || (c >= '[' && c <= '`') || (c >= '{' && c <= '~');
-        }
-        public override string ParseMessage(string input) {
+        }        
+        protected override string ParseMessage(string input) {
             StringBuilder sb = new StringBuilder(input);
             SimplifyCharacters(sb);
             
@@ -294,20 +305,65 @@ namespace GoldenSparks.Modules.Relay.Discord
                 
                 sb.Remove(i, 1); length--;
             }
+            
+            StripMarkdown(sb);
             return sb.ToString();
         }
         
+        static void StripMarkdown(StringBuilder sb) {
+            // TODO proper markdown parsing
+            sb.Replace("**", "");
+        }
+
+
+        readonly object updateLocker = new object();
+        volatile bool updateScheduled;
+        DateTime nextUpdate;
+
+        public void UpdateDiscordStatus() {
+            TimeSpan delay = default(TimeSpan);
+            DateTime now   = DateTime.UtcNow;
+
+            // websocket gets disconnected with code 4008 if try to send too many updates too quickly
+            lock (updateLocker) {
+                // status update already pending?
+                if (updateScheduled) return;
+                updateScheduled = true;
+
+                // slowdown if sending too many status updates
+                if (nextUpdate > now) delay = nextUpdate - now;
+            }
+            
+            Server.MainScheduler.QueueOnce(DoUpdateStatus, null, delay);
+        }
+
+        void DoUpdateStatus(SchedulerTask task) {
+            DateTime now = DateTime.UtcNow;
+            // OK to queue next status update now
+            lock (updateLocker) {
+                updateScheduled = false;
+                nextUpdate      = now.AddSeconds(0.5);
+                // ensures status update can't be sent more than once every 0.5 seconds
+            }
+
+            DiscordWebsocket s = socket;
+            // websocket gets disconnected with code 4003 if tries to send data before identifying
+            //  https://discord.com/developers/docs/topics/opcodes-and-status-codes
+            if (s == null || !s.SentIdentify) return;
+
+            try { s.UpdateStatus(); } catch { }
+        }
+
         string GetStatusMessage() {
-            string online = PlayerInfo.NonHiddenCount().ToString();
-            return Config.StatusMessage.Replace("{PLAYERS}", online);
+            fakeGuest.group     = Group.DefaultRank;
+            List<Player> online = PlayerInfo.GetOnlineCanSee(fakeGuest, fakeGuest.Rank); 
+
+            string numOnline = online.Count.ToString();
+            return Config.StatusMessage.Replace("{PLAYERS}", numOnline);
         }
         
-        void UpdateDiscordStatus() {
-            try { socket.UpdateStatus(); } catch { }
-        }
-
-
-        public override void OnStart() {
+        
+        protected override void OnStart() {
             session = new DiscordSession();
             base.OnStart();
             
@@ -315,8 +371,8 @@ namespace GoldenSparks.Modules.Relay.Discord
             OnPlayerDisconnectEvent.Register(HandlePlayerDisconnect, Priority.Low);
             OnPlayerActionEvent.Register(HandlePlayerAction, Priority.Low);
         }
-
-        public override void OnStop() {
+        
+        protected override void OnStop() {
             socket = null;
             if (api != null) {
                 api.StopAsync();
@@ -341,25 +397,39 @@ namespace GoldenSparks.Modules.Relay.Discord
         /// <summary> Asynchronously sends a message to the discord API </summary>
         public void Send(DiscordApiMessage msg) {
             // can be null in gap between initial connection and ready event received
-            if (api != null) api.SendAsync(msg);
+            if (api != null) api.QueueAsync(msg);
         }
-
-        public override void DoSendMessage(string channel, string message) {
-            ChannelSendMessage msg = new ChannelSendMessage(channel, message);
-            msg.Allowed = allowed;
-            Send(msg);
+        
+        protected override void DoSendMessage(string channel, string message) {
+            message = ConvertMessage(message);
+            const int MAX_MSG_LEN = 2000;
+            
+            // Discord doesn't allow more than 2000 characters in a single message,
+            //  so break up message into multiple parts for this extremely rare case
+            //  https://discord.com/developers/docs/resources/channel#create-message
+            for (int offset = 0; offset < message.Length; offset += MAX_MSG_LEN)
+            {
+                int partLen = Math.Min(message.Length - offset, MAX_MSG_LEN);
+                string part = message.Substring(offset, partLen);
+                
+                ChannelSendMessage msg = new ChannelSendMessage(channel, part);
+                msg.Allowed = allowed;
+                Send(msg);
+            }
         }
-
-        public override string ConvertMessage(string message) {
-            message = base.ConvertMessage(message);
+        
+        /// <summary> Formats a message for displaying on Discord </summary>
+        /// <example> Escapes markdown characters such as _ and * </example>
+        string ConvertMessage(string message) {
+            message = ConvertMessageCommon(message);
             message = Colors.StripUsed(message);
             message = EscapeMarkdown(message);
             message = SpecialToMarkdown(message);
             return message;
         }
         
-        static readonly string[] markdown_special = {  @"\",  @"*",  @"_",  @"~",  @"`",  @"|" };
-        static readonly string[] markdown_escaped = { @"\\", @"\*", @"\_", @"\~", @"\`", @"\|" };
+        static readonly string[] markdown_special = {  @"\",  @"*",  @"_",  @"~",  @"`",  @"|",  @"-",  @"#" };
+        static readonly string[] markdown_escaped = { @"\\", @"\*", @"\_", @"\~", @"\`", @"\|", @"\-", @"\#" };
         static string EscapeMarkdown(string message) {
             // don't let user use bold/italic etc markdown
             for (int i = 0; i < markdown_special.Length; i++) 
@@ -368,8 +438,8 @@ namespace GoldenSparks.Modules.Relay.Discord
             }
             return message;
         }
-
-        public override string PrepareMessage(string message) {
+        
+        protected override string PrepareMessage(string message) {
             // allow uses to do things like replacing '+' with ':green_square:'
             for (int i = 0; i < filter_triggers.Count; i++) 
             {
@@ -377,18 +447,43 @@ namespace GoldenSparks.Modules.Relay.Discord
             }
             return message;
         }
-
-
+        
+        
         // all users are already verified by Discord
-        public override bool CheckController(string userID, ref string error) { return true; }
-
-        public override string UnescapeFull(Player p) {
+        protected override bool CheckController(string userID, ref string error) { return true; }
+        
+        protected override string UnescapeFull(Player p) {
             return BOLD + base.UnescapeFull(p) + BOLD;
-        }
-        public override string UnescapeNick(Player p) {
+        }        
+        protected override string UnescapeNick(Player p) {
             return BOLD + base.UnescapeNick(p) + BOLD;
         }
         
+        protected override void MessagePlayers(RelayPlayer p) {
+            ChannelSendEmbed embed = new ChannelSendEmbed(p.ChannelID);
+            int total;
+            List<OnlineListEntry> entries = PlayerInfo.GetOnlineList(p, p.Rank, out total);
+            
+            embed.Color  = Config.EmbedColor;
+            embed.Title  = string.Format("{0} player{1} currently online",
+                                        total, total.Plural());
+            
+            foreach (OnlineListEntry e in entries) 
+            {
+                if (e.players.Count == 0) continue;
+                
+                embed.Fields.Add(
+                    ConvertMessage(FormatRank(e)),
+                    ConvertMessage(FormatPlayers(p, e))
+                );
+            }
+            AddGameStatus(embed);
+            Send(embed);
+        }
+        
+        static string FormatPlayers(Player p, OnlineListEntry e) {
+            return e.players.Join(pl => FormatNick(p, pl), ", ");
+        }
         
         static string FormatRank(OnlineListEntry e) {
             return string.Format(UNDERLINE + "{0}" + UNDERLINE + " (" + CODE + "{1}" + CODE + ")",
@@ -411,29 +506,21 @@ namespace GoldenSparks.Modules.Relay.Discord
                                  flags);
         }
         
-        static string FormatPlayers(Player p, OnlineListEntry e) {
-            return e.players.Join(pl => FormatNick(p, pl), ", ");
-        }
-
-        public override void MessagePlayers(RelayPlayer p) {
-            ChannelSendEmbed embed = new ChannelSendEmbed(p.ChannelID);
-            int total;
-            List<OnlineListEntry> entries = PlayerInfo.GetOnlineList(p, p.Rank, out total);
+        void AddGameStatus(ChannelSendEmbed embed) {
+            if (!Config.EmbedGameStatuses) return;
             
-            embed.Color = Config.EmbedColor;
-            embed.Title = string.Format("{0} player{1} currently online",
-                                        total, total.Plural());
+            StringBuilder sb = new StringBuilder();
+            IGame[] games    = IGame.RunningGames.Items;
             
-            foreach (OnlineListEntry e in entries) 
+            foreach (IGame game in games)
             {
-                if (e.players.Count == 0) continue;
-                
-                embed.Fields.Add(
-                    ConvertMessage(FormatRank(e)),
-                    ConvertMessage(FormatPlayers(p, e))
-                );
+                Level lvl = game.Map;
+                if (!game.Running || lvl == null) continue;
+                sb.Append(BOLD + game.GameName + BOLD + " is running on " + lvl.name + "\n");
             }
-            Send(embed);
+            
+            if (sb.Length == 0) return;
+            embed.Fields.Add("Running games", ConvertMessage(sb.ToString()));
         }
         
         

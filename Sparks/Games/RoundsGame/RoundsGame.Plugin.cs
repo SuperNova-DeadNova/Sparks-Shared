@@ -1,13 +1,13 @@
 ﻿/*
-    Copyright 2015 GoldenSparks
+    Copyright 2015 MCGalaxy
         
     Dual-licensed under the Educational Community License, Version 2.0 and
     the GNU General Public License, Version 3 (the "Licenses"); you may
     not use this file except in compliance with the Licenses. You may
     obtain a copy of the Licenses at
     
-    http://www.opensource.org/licenses/ecl2.php
-    http://www.gnu.org/licenses/gpl-3.0.html
+    https://opensource.org/license/ecl-2-0/
+    https://www.gnu.org/licenses/gpl-3.0.html
     
     Unless required by applicable law or agreed to in writing,
     software distributed under the Licenses are distributed on an "AS IS"
@@ -25,38 +25,49 @@ using GoldenSparks.Network;
 namespace GoldenSparks.Games {
 
     public abstract partial class RoundsGame : IGame {
-
-        public virtual void HookEventHandlers() {
-            OnLevelUnloadEvent.Register(HandleLevelUnload, Priority.High);  
+        
+        protected virtual void HookEventHandlers() {
+            OnLevelUnloadEvent.Register(HandleLevelUnload, Priority.High);
+            OnMainLevelChangingEvent.Register(HandleMainChanged, Priority.High);
+            
             OnSendingHeartbeatEvent.Register(HandleSendingHeartbeat, Priority.High);
             OnInfoSaveEvent.Register(HandleSaveStats, Priority.High);
             
             OnPlayerActionEvent.Register(HandlePlayerAction, Priority.High);
+            OnPlayerConnectEvent.Register(HandlePlayerConnect, Priority.High);
             OnPlayerDisconnectEvent.Register(HandlePlayerDisconnect, Priority.High);
         }
-
-        public virtual void UnhookEventHandlers() {
+        
+        protected virtual void UnhookEventHandlers() {
             OnLevelUnloadEvent.Unregister(HandleLevelUnload);
+            OnMainLevelChangingEvent.Unregister(HandleMainChanged);
+            
             OnSendingHeartbeatEvent.Unregister(HandleSendingHeartbeat);
             OnInfoSaveEvent.Unregister(HandleSaveStats);
             
-            OnPlayerActionEvent.Unregister(HandlePlayerAction);            
+            OnPlayerActionEvent.Unregister(HandlePlayerAction);
+            OnPlayerConnectEvent.Unregister(HandlePlayerConnect);
             OnPlayerDisconnectEvent.Unregister(HandlePlayerDisconnect);
         }
         
         void HandleSaveStats(Player p, ref bool cancel) { SaveStats(p); }
-
-        public virtual void HandleSendingHeartbeat(Heartbeat service, ref string name) {
+        
+        protected virtual void HandleSendingHeartbeat(Heartbeat service, ref string name) {
             if (Map == null || !GetConfig().MapInHeartbeat) return;
             name += " (map: " + Map.MapName + ")";
         }
 
-        public virtual void HandlePlayerDisconnect(Player p, string reason) {
+        protected virtual void HandlePlayerConnect(Player p) {
+            if (GetConfig().SetMainLevel) return;
+            p.Message(WelcomeMessage);
+        }
+        
+        protected virtual void HandlePlayerDisconnect(Player p, string reason) {
             if (p.level != Map) return;
             PlayerLeftGame(p);
         }
-
-        public void HandleJoinedCommon(Player p, Level prevLevel, Level level, ref bool announce) {
+        
+        protected void HandleJoinedCommon(Player p, Level prevLevel, Level level, ref bool announce) {
             if (prevLevel == Map && level != Map) {
                 if (Picker.Voting) Picker.ResetVoteMessage(p);
                 ResetStatus(p);
@@ -75,23 +86,8 @@ namespace GoldenSparks.Games {
                 announce = false;
             }
         }
-
-        public void MessageMapInfo(Player p) {
-            p.Message("This map has &a{0} likes &Sand &c{1} dislikes",
-                           Map.Config.Likes, Map.Config.Dislikes);
-            string[] authors = Map.Config.Authors.SplitComma();
-            if (authors.Length == 0) return;
-            
-            p.Message("It was created by {0}", authors.Join(n => p.FormatNick(n)));
-        }
-
-        public void HandleLevelUnload(Level lvl, ref bool cancel) {
-            if (lvl != Map) return;
-            Logger.Log(LogType.GameActivity, "Unload cancelled! A {0} game is currently going on!", GameName);
-            cancel = true;
-        }
-
-        public void HandlePlayerAction(Player p, PlayerAction action, string message, bool stealth) {
+        
+        protected void HandlePlayerAction(Player p, PlayerAction action, string message, bool stealth) {
             if (!(action == PlayerAction.Referee || action == PlayerAction.UnReferee)) return;
             if (p.level != Map) return;
             
@@ -107,6 +103,19 @@ namespace GoldenSparks.Games {
             
             Entities.GlobalSpawn(p, false, "");
             TabList.Update(p, true);
+        }
+        
+        
+        void HandleLevelUnload(Level lvl, ref bool cancel) {
+            if (lvl != Map) return;
+            Logger.Log(LogType.GameActivity, "Unload cancelled! A {0} game is currently going on!", GameName);
+            cancel = true;
+        }
+        
+        void HandleMainChanged(ref string map) {
+            Level cur = Map; // in case Map is changed by another thread
+            if (!GetConfig().SetMainLevel || cur == null) return;
+            map = cur.name;
         }
     }
 }

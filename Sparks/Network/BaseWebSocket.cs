@@ -1,13 +1,13 @@
 ﻿/*
-    Copyright 2015 GoldenSparks
+    Copyright 2015 MCGalaxy
     
     Dual-licensed under the Educational Community License, Version 2.0 and
     the GNU General Public License, Version 3 (the "Licenses"); you may
     not use this file except in compliance with the Licenses. You may
     obtain a copy of the Licenses at
     
-    http://www.opensource.org/licenses/ecl2.php
-    http://www.gnu.org/licenses/gpl-3.0.html
+    https://opensource.org/license/ecl-2-0/
+    https://www.gnu.org/licenses/gpl-3.0.html
     
     Unless required by applicable law or agreed to in writing,
     software distributed under the Licenses are distributed on an "AS IS"
@@ -19,23 +19,31 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace GoldenSparks.Network {
-    
+namespace GoldenSparks.Network 
+{
     /// <summary> Abstracts WebSocket handling </summary>
-    public abstract class BaseWebSocket : INetSocket, INetProtocol {
-        public bool conn, upgrade;
-        public bool readingHeaders = true;
-
+    /// <remarks> See RFC 6455 for websocket specification </remarks>
+    public abstract class BaseWebSocket : INetSocket, INetProtocol 
+    {
+        protected bool conn, upgrade;
+        protected bool readingHeaders = true;
+        
         /// <summary> Computes a base64-encoded handshake verification key </summary>
-        public static string ComputeKey(string rawKey) {
+        protected static string ComputeKey(string rawKey) {
+            // RFC 6455, section 1.3 - Opening Handshake
+            //   For this header field, the server has to take the value (as present
+            //    in the header field... and concatenate this with the GUID
+            //    "258EAFA5-E914-47DA-95CA-C5AB0DC85B11" in string form
+            //   A SHA-1 hash, base64-encoded, of this concatenation is 
+            //    then returned in the server's handshake.
             string key = rawKey + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
             SHA1   sha = SHA1.Create();
             byte[] raw = sha.ComputeHash(Encoding.ASCII.GetBytes(key));
             return Convert.ToBase64String(raw);
         }
-
-        public abstract void OnGotAllHeaders();
-        public abstract void OnGotHeader(string key, string val);
+        
+        protected abstract void OnGotAllHeaders();
+        protected abstract void OnGotHeader(string name, string value);
 
         void ProcessHeader(string raw) {
             // end of all headers
@@ -45,15 +53,17 @@ namespace GoldenSparks.Network {
             int sep = raw.IndexOf(':');
             if (sep == -1) return;
             
-            string key = raw.Substring(0, sep);
-            string val = raw.Substring(sep + 1).Trim();
+            string name  = raw.Substring(0, sep);
+            string value = raw.Substring(sep + 1).Trim();
             
-            if (key.CaselessEq("Connection")) {
-                conn    = val.CaselessContains("Upgrade");
-            } else if (key.CaselessEq("Upgrade")) {
-                upgrade = val.CaselessEq("websocket");
+            // RFC 6455, section 1.3 - Opening Handshake
+            //   To this end, the WebSocket client's handshake is an HTTP Upgrade request
+            if (name.CaselessEq("Connection")) {
+                conn    = value.CaselessContains("Upgrade");
+            } else if (name.CaselessEq("Upgrade")) {
+                upgrade = value.CaselessEq("websocket");
             } else {
-                OnGotHeader(key, val);
+                OnGotHeader(name, value);
             }
         }
         
@@ -85,23 +95,23 @@ namespace GoldenSparks.Network {
         const int state_extLen2 = 3;
         const int state_mask    = 4;
         const int state_data    = 5;
-
-        public const int OPCODE_CONTINUED  = 0;
-        public const int OPCODE_TEXT       = 1;
-        public const int OPCODE_BINARY     = 2;
-        public const int OPCODE_DISCONNECT = 8;
-        public const int FIN = 0x80;
-
-        public const int REASON_NORMAL         = 1000;
-        public const int REASON_INVALID_DATA   = 1003;
-        public const int REASON_EXCESSIVE_SIZE = 1009;
+        
+        protected const int OPCODE_CONTINUED  = 0;
+        protected const int OPCODE_TEXT       = 1;
+        protected const int OPCODE_BINARY     = 2;
+        protected const int OPCODE_DISCONNECT = 8;        
+        protected const int FIN = 0x80;
+        
+        protected const int REASON_NORMAL         = 1000;
+        protected const int REASON_INVALID_DATA   = 1003;
+        protected const int REASON_EXCESSIVE_SIZE = 1009;
         
         int GetDisconnectReason() {
             if (frameLen < 2) return REASON_NORMAL;
             
-            // See section 5.5.1 of websockets specification:
-            //  "... If there is a body, the first two bytes of the body MUST 
-            //   be a 2-byte unsigned integer (in network byte order)..."
+            // RFC 6455, section 5.5.1 - Close
+            //   If there is a body, the first two bytes of the body MUST 
+            //    be a 2-byte unsigned integer (in network byte order)...
             return (frame[0] << 8) | frame[1];
         }
         
@@ -208,8 +218,8 @@ namespace GoldenSparks.Network {
             }
             return offset;
         }
-
-        public static byte[] WrapDisconnect(int reason) {
+        
+        protected static byte[] WrapDisconnect(int reason) {
             byte[] packet = new byte[4];
             packet[0] = OPCODE_DISCONNECT | FIN;
             packet[1] = 2;
@@ -219,7 +229,7 @@ namespace GoldenSparks.Network {
         }
         
         public void Disconnect() { Disconnect(REASON_NORMAL); }
-        public void Disconnect(int reason) {
+        protected void Disconnect(int reason) {
             try {
                 SendRaw(WrapDisconnect(reason), SendFlags.Synchronous);
             } catch {
@@ -227,18 +237,19 @@ namespace GoldenSparks.Network {
             }
             OnDisconnected(reason);
         }
-
+        
         /// <summary> Called when either side ends the connection for the given reason </summary>
-        public abstract void OnDisconnected(int reason);
-
-        public abstract void HandleData(byte[] data, int len);
-
+        protected abstract void OnDisconnected(int reason);
+        
+        protected abstract void HandleData(byte[] data, int len);
+        
         /// <summary> Sends data to the underlying socket without wrapping the data in a websocket frame </summary>
-        public abstract void SendRaw(byte[] data, SendFlags flags);
+        protected abstract void SendRaw(byte[] data, SendFlags flags);
     }
     
     /// <summary> Abstracts a server side WebSocket </summary>
-    public abstract class ServerWebSocket : BaseWebSocket {
+    public abstract class ServerWebSocket : BaseWebSocket 
+    {
         bool version;
         string verKey;
         
@@ -256,8 +267,8 @@ namespace GoldenSparks.Network {
             SendRaw(Encoding.ASCII.GetBytes(headers), SendFlags.None);
             readingHeaders = false;
         }
-
-        public override void OnGotAllHeaders() {
+        
+        protected override void OnGotAllHeaders() {
             if (conn && upgrade && version && verKey != null) {
                 AcceptConnection();
             } else {
@@ -265,17 +276,17 @@ namespace GoldenSparks.Network {
                 Close();
             }
         }
-
-        public override void OnGotHeader(string key, string val) {
-            if (key.CaselessEq("Sec-WebSocket-Version")) {
-                version = val.CaselessEq("13");
-            } else if (key.CaselessEq("Sec-WebSocket-Key")) {
-                verKey  = val;
+        
+        protected override void OnGotHeader(string name, string value) {
+            if (name.CaselessEq("Sec-WebSocket-Version")) {
+                version = value.CaselessEq("13");
+            } else if (name.CaselessEq("Sec-WebSocket-Key")) {
+                verKey  = value;
             }
         }
-
+        
         /// <summary> Wraps the given data in a websocket frame </summary>
-        public static byte[] WrapData(byte[] data) {
+        protected static byte[] WrapData(byte[] data) {
             int headerLen = data.Length >= 126 ? 4 : 2;
             byte[] packet = new byte[headerLen + data.Length];
             packet[0] = OPCODE_BINARY | FIN;
@@ -293,8 +304,9 @@ namespace GoldenSparks.Network {
     }
     
     /// <summary> Abstracts a client side WebSocket </summary>
-    public abstract class ClientWebSocket : BaseWebSocket {
-        public string path = "/";
+    public abstract class ClientWebSocket : BaseWebSocket 
+    {
+        protected string path = "/";
         string verKey;
         // TODO: use a random securely generated key
         const string key = "xTNDiuZRoMKtxrnJDWyLmA==";
@@ -302,8 +314,8 @@ namespace GoldenSparks.Network {
         void AcceptConnection() {
             readingHeaders = false;
         }
-
-        public override void OnGotAllHeaders() {
+        
+        protected override void OnGotAllHeaders() {
             if (conn && upgrade && verKey == ComputeKey(key)) {
                 AcceptConnection();
             } else {
@@ -311,15 +323,15 @@ namespace GoldenSparks.Network {
                 Close();
             }
         }
-
-        public override void OnGotHeader(string key, string val) {
-            if (key.CaselessEq("Sec-WebSocket-Accept")) {
-                verKey = val;
+        
+        protected override void OnGotHeader(string name, string value) {
+            if (name.CaselessEq("Sec-WebSocket-Accept")) {
+                verKey = value;
             }
         }
-
+        
         /// <summary> Wraps the given data in a websocket frame </summary>
-        public static byte[] WrapData(byte[] data) {
+        protected static byte[] WrapData(byte[] data) {
             int headerLen = data.Length >= 126 ? 4 : 2;
             byte[] packet = new byte[headerLen + 4 + data.Length];
             packet[0] = OPCODE_TEXT | FIN;
@@ -339,13 +351,13 @@ namespace GoldenSparks.Network {
         public override void Send(byte[] buffer, SendFlags flags) {
             SendRaw(WrapData(buffer), flags);
         }
-
-
-        public void WriteHeader(string header) {
+        
+        
+        protected void WriteHeader(string header) {
             SendRaw(Encoding.ASCII.GetBytes(header + "\r\n"), SendFlags.None);
         }
-
-        public virtual void WriteCustomHeaders() { }
+        
+        protected virtual void WriteCustomHeaders() { }
         
         public override void Init() {
             WriteHeader("GET " + path + " HTTP/1.1");

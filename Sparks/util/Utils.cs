@@ -1,13 +1,13 @@
 ﻿/*
-    Copyright 2015 GoldenSparks
+    Copyright 2015 MCGalaxy
     
     Dual-licensed under the Educational Community License, Version 2.0 and
     the GNU General Public License, Version 3 (the "Licenses"); you may
     not use this file except in compliance with the Licenses. You may
     obtain a copy of the Licenses at
     
-    http://www.opensource.org/licenses/ecl2.php
-    http://www.gnu.org/licenses/gpl-3.0.html
+    https://opensource.org/license/ecl-2-0/
+    https://www.gnu.org/licenses/gpl-3.0.html
     
     Unless required by applicable law or agreed to in writing,
     software distributed under the Licenses are distributed on an "AS IS"
@@ -102,6 +102,23 @@ namespace GoldenSparks {
                 while ((line = r.ReadLine()) != null) { lines.Add(line); }
             }
             return lines;
+        }
+
+ 
+        public static string ToHexString(byte[] data) {            
+            char[] hex = new char[data.Length * 2];
+
+            for (int i = 0; i < data.Length; i++)
+            {
+                int value = data[i];
+                hex[i * 2 + 0] = HexEncode(value >> 4);
+                hex[i * 2 + 1] = HexEncode(value & 0x0F);
+            }
+            return new string(hex);
+        }
+
+        static char HexEncode(int i) {
+            return i < 10 ? (char)(i + '0') : (char)((i - 10) + 'a');
         }
     }
 }
