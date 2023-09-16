@@ -19,7 +19,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace MCGalaxy.Commands
+namespace GoldenSparks.Commands
 {
     public class CmdCtf : Command
     {

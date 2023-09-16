@@ -1,5 +1,5 @@
 ﻿/*
-    Copyright 2015 MCGalaxy
+    Copyright 2015 GoldenSparks
     
     Dual-licensed under the Educational Community License, Version 2.0 and
     the GNU General Public License, Version 3 (the "Licenses"); you may
@@ -156,7 +156,7 @@ namespace GoldenSparks.Platform
             //     at System.TermInfoDriver.ReadLine () [0x00000]
             //     at System.ConsoleDriver.ReadLine () [0x00000]
             //     at System.Sparkie.ReadLine () [0x00013]
-            //     at MCGalaxy.Cli.CLI.ConsoleLoop () [0x00002]
+            //     at GoldenSparks.Cli.CLI.ConsoleLoop () [0x00002]
             // (this errors multiple times a second and can quickly fill up tons of disk space)
             // And also causes console to be spammed with '1R3;1R3;1R3;' or '363;1R;363;1R;'
             //

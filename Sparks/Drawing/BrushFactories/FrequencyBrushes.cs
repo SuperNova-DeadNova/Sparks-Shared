@@ -1,5 +1,5 @@
 ﻿/*
-    Copyright 2015 MCGalaxy
+    Copyright 2015 GoldenSparks
         
     Dual-licensed under the Educational Community License, Version 2.0 and
     the GNU General Public License, Version 3 (the "Licenses"); you may
@@ -152,7 +152,7 @@ namespace GoldenSparks.Drawing.Brushes
             return new GradientBrush(blocks, axis);
         }
 
-        // TODO: Need to unify axis parsing code across MCGalaxy
+        // TODO: Need to unify axis parsing code across GoldenSparks
         static CustomModelAnimAxis GetAxis(ref BrushArgs args) {
             CustomModelAnimAxis axis = (CustomModelAnimAxis)200;
             string msg = args.Message;

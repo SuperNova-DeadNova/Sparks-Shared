@@ -18,7 +18,7 @@
 using System;
 using System.Threading;
 
-/*namespace MCGalaxy
+/*namespace GoldenSparks
 {
     public class CmdZombieSpawn : Command
     {

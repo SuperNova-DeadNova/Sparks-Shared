@@ -1,5 +1,5 @@
 ﻿/*
-    Copyright 2015 MCGalaxy
+    Copyright 2015 GoldenSparks
     
     Dual-licensed under the Educational Community License, Version 2.0 and
     the GNU General Public License, Version 3 (the "Licenses"); you may
@@ -48,7 +48,7 @@ namespace GoldenSparks.SQL
             Server.CheckFile("sqlite3_x32.dll");
             Server.CheckFile("sqlite3_x64.dll");
 
-            // sqlite3.dll is the .DLL that MCGalaxy will actually load on Windows
+            // sqlite3.dll is the .DLL that GoldenSparks will actually load on Windows
             try {
                 string dll = IntPtr.Size == 8 ? "sqlite3_x64.dll" : "sqlite3_x32.dll";
                 if (File.Exists(dll)) File.Copy(dll, "sqlite3.dll", true);
@@ -138,6 +138,6 @@ namespace GoldenSparks.SQL
     sealed class MCGSQLiteConnection : SQLiteConnection 
     {
         protected override bool ConnectionPooling { get { return Server.Config.DatabasePooling; } }
-        protected override string DBPath { get { return "MCGalaxy.db"; } }
+        protected override string DBPath { get { return "GoldenSparks.db"; } }
     }
 }

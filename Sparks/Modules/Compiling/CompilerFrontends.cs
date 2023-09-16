@@ -1,7 +1,7 @@
 /*
-    Copyright 2010 MCLawl Team - Written by Valek (Modified by MCGalaxy)
+    Copyright 2010 MCLawl Team - Written by Valek (Modified by GoldenSparks)
 
-    Edited for use with MCGalaxy
+    Edited for use with GoldenSparks
  
     Dual-licensed under the Educational Community License, Version 2.0 and
     the GNU General Public License, Version 3 (the "Licenses"); you may
@@ -51,16 +51,16 @@ namespace GoldenSparks.Modules.Compiling
         public override string CommandSkeleton {
             get {
                 return @"//\tAuto-generated command skeleton class
-//\tUse this as a basis for custom MCGalaxy commands
+//\tUse this as a basis for custom GoldenSparks commands
 //\tNaming should be kept consistent (e.g. /update command should have a class name of 'CmdUpdate' and a filename of 'CmdUpdate.cs')
-// As a note, MCGalaxy is designed for .NET 4.0
+// As a note, GoldenSparks is designed for .NET 4.0
 
 // To reference other assemblies, put a ""//reference [assembly filename]"" at the top of the file
 //   e.g. to reference the System.Data assembly, put ""//reference System.Data.dll""
 
 // Add any other using statements you need after this
 using System;
-using MCGalaxy;
+using GoldenSparks;
 
 public class Cmd{0} : Command
 {{
@@ -101,7 +101,7 @@ public class Cmd{0} : Command
         public override string PluginSkeleton {
             get {
                 return @"//\tAuto-generated plugin skeleton class
-//\tUse this as a basis for custom MCGalaxy plugins
+//\tUse this as a basis for custom GoldenSparks plugins
 
 // To reference other assemblies, put a ""//reference [assembly filename]"" at the top of the file
 //   e.g. to reference the System.Data assembly, put ""//reference System.Data.dll""
@@ -109,14 +109,14 @@ public class Cmd{0} : Command
 // Add any other using statements you need after this
 using System;
 
-namespace MCGalaxy
+namespace GoldenSparks
 {{
 \tpublic class {0} : Plugin
 \t{{
 \t\t// The plugin's name (i.e what shows in /Plugins)
 \t\tpublic override string name {{ get {{ return ""{0}""; }} }}
 
-\t\t// The oldest version of MCGalaxy this plugin is compatible with
+\t\t// The oldest version of GoldenSparks this plugin is compatible with
 \t\tpublic override string GoldenSparks_Version {{ get {{ return ""{2}""; }} }}
 
 \t\t// Message displayed in server logs when this plugin is loaded

@@ -31,7 +31,7 @@ using GoldenSparks.Scripting;
 
 namespace GoldenSparks 
 {
-    /// <summary> This class provides for more advanced modification to MCGalaxy </summary>
+    /// <summary> This class provides for more advanced modification to GoldenSparks </summary>
     public abstract class Plugin 
     {
         /// <summary> Hooks into events and initalises states/resources etc </summary>
@@ -50,7 +50,7 @@ namespace GoldenSparks
         
         /// <summary> Name of the plugin. </summary>
         public abstract string name { get; }
-        /// <summary> The oldest version of MCGalaxy this plugin is compatible with. </summary>
+        /// <summary> The oldest version of GoldenSparks this plugin is compatible with. </summary>
         public virtual string GoldenSparks_Version { get { return null; } }
         /// <summary> Version of this plugin. </summary>
         public virtual int build { get { return 0; } }

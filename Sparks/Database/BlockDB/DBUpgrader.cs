@@ -1,5 +1,5 @@
 ﻿/*
-    Copyright 2015 MCGalaxy
+    Copyright 2015 GoldenSparks
         
     Dual-licensed under the Educational Community License, Version 2.0 and
     the GNU General Public License, Version 3 (the "Licenses"); you may
@@ -27,8 +27,8 @@ namespace GoldenSparks.DB
         public static bool Upgrading = false;
         public static string[] CompactMessages = new string[] {
             " If you are using SQLite, It is recommended that you compact the database by either:",
-            "   a) doing VACUUM on the database (note that this will create a temp file as big as MCGalaxy.db)",
-            "   b) doing /server backup litedb, shutting down the server, deleting MCGalaxy.db, then finally running /server import SQL",
+            "   a) doing VACUUM on the database (note that this will create a temp file as big as GoldenSparks.db)",
+            "   b) doing /server backup litedb, shutting down the server, deleting GoldenSparks.db, then finally running /server import SQL",
         };
         
         public static void Lock() {

@@ -1,7 +1,7 @@
 ﻿/*
-    Copyright 2010 MCLawl Team - Written by Valek (Modified by MCGalaxy)
+    Copyright 2010 MCLawl Team - Written by Valek (Modified by GoldenSparks)
 
-    Edited for use with MCGalaxy
+    Edited for use with GoldenSparks
  
     Dual-licensed under the Educational Community License, Version 2.0 and
     the GNU General Public License, Version 3 (the "Licenses"); you may

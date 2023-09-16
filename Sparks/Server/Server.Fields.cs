@@ -40,14 +40,14 @@ namespace GoldenSparks
         public static PlayerMetaList Notes = new PlayerMetaList("text/notes.txt");
         
         /// <summary> *** DO NOT USE THIS! *** Use VersionString, as this field is a constant and is inlined if used. </summary>
-        public const string InternalVersion = "1.1.0";
+        public const string InternalVersion = "1.1.1";
         public static string Version { get { return InternalVersion; } }
 
         public static string SoftwareName = "&6S&ep&6a&er&6k&ei&6e&e'&6s &eC&6o&er&6e&e";
         static string fullName;
         public static string SoftwareNameVersioned {
             // By default, if SoftwareName gets externally changed, that is reflected in SoftwareNameVersioned too
-            get { return fullName ?? SoftwareName + " " + Version; }
+            get { return fullName ?? SoftwareName + " v2." + Version; }
             set { fullName = value; }
         }
 

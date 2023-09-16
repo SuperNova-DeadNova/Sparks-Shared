@@ -6,8 +6,8 @@
     not use this file except in compliance with the Licenses. You may
     obtain a copy of the Licenses at
     
-    https://opensource.org/license/ecl-2-0/
-    https://www.gnu.org/licenses/gpl-3.0.html
+    http://www.opensource.org/licenses/ecl2.php
+    http://www.gnu.org/licenses/gpl-3.0.html
     
     Unless required by applicable law or agreed to in writing,
     software distributed under the Licenses are distributed on an "AS IS"
@@ -18,56 +18,105 @@
 using System;
 using GoldenSparks.Commands.Chatting;
 
-namespace GoldenSparks.Core {
+namespace GoldenSparks.Core
+{
 
-    internal static class ChatHandler {
-        
-        internal static void HandleOnChat(ChatScope scope, Player source, string msg, 
-                                          object arg, ref ChatMessageFilter filter, bool irc) {
+    public static class ChatHandler
+    {
+
+        public static void HandleOnChat(ChatScope scope, Player source, string msg,
+                                          object arg, ref ChatMessageFilter filter, bool irc)
+        {
             msg = msg.Replace("λFULL", source.name).Replace("λNICK", source.name);
             LogType logType = LogType.PlayerChat;
-            
-            if (scope == ChatScope.Perms) {
-               logType = LogType.StaffChat;
-            } else if (scope == ChatScope.Chatroom || scope == ChatScope.AllChatrooms) {
-                logType = LogType.ChatroomChat;
-            } else if (scope == ChatScope.Rank) {
+
+            if (scope == ChatScope.Perms)
+            {
+                logType = LogType.StaffChat;
+            }
+            else if (scope == ChatScope.Rank)
+            {
                 logType = LogType.RankChat;
             }
-            
+
             if (scope != ChatScope.PM) Logger.Log(logType, msg);
         }
-        
-        internal static void HandleCommand(Player p, string cmd, string args, CommandData data) {
-            if (!Server.Config.CoreSecretCommands) return;
 
+        public static void HandleCommand(Player p, string cmd, string args, CommandData data)
+        {
+            if (!Server.Config.CoreSecretCommands) return;
             // DO NOT REMOVE THE TWO COMMANDS BELOW, /PONY AND /RAINBOWDASHLIKESCOOLTHINGS. -EricKilla
-            if (cmd == "pony") {
+            if (cmd.ToLower() == "pony")
+            {
                 p.cancelcommand = true;
                 if (!MessageCmd.CanSpeak(p, cmd)) return;
-                int used = p.Extras.GetInt("MCG_PONY");
-                            
-                if (used < 2) {
+                int used = p.Extras.GetInt("GS_PONY");
+
+                if (used < 2)
+                {
                     Chat.MessageFrom(p, "λNICK &Sjust so happens to be a proud brony! Everyone give λNICK &Sa brohoof!");
                     Logger.Log(LogType.CommandUsage, "{0} used /{1}", p.name, cmd);
-                } else {
+                }
+                else
+                {
                     p.Message("You have used this command 2 times. You cannot use it anymore! Sorry, Brony!");
                 }
-                
-                p.Extras["MCG_PONY"] = used + 1;
-            } else if (cmd == "rainbowdashlikescoolthings") {
+
+                p.Extras["GS_PONY"] = used + 1;
+            }
+            else if (cmd.ToLower() == "rainbowdashlikescoolthings")
+            {
                 p.cancelcommand = true;
                 if (!MessageCmd.CanSpeak(p, cmd)) return;
-                int used = p.Extras.GetInt("MCG_RD");
-                
-                if (used < 2) {
+                int used = p.Extras.GetInt("GS_RD");
+
+                if (used < 2)
+                {
                     Chat.MessageGlobal("&4T&6H&eI&aS&3 S&9E&1R&4V&6E&eR &aJ&3U&9S&1T &4G&6O&eT &a2&30 &9P&1E&4R&6C&eE&aN&3T &9C&1O&4O&6L&eE&aR&3!");
                     Logger.Log(LogType.CommandUsage, "{0} used /{1}", p.name, cmd);
-                } else {
+                }
+                else
+                {
                     p.Message("You have used this command 2 times. You cannot use it anymore! Sorry, Brony!");
                 }
-                
-                p.Extras["MCG_RD"] = used + 1;
+
+                p.Extras["GS_RD"] = used + 1;
+            }
+            if (!Server.Config.MCLawlSecretCommands) return;
+            if (cmd.ToLower() == "care")
+            {
+                p.cancelcommand = true;
+                int used = p.Extras.GetInt("GS_CARE");
+
+                if (used < 2)
+                {
+                    Chat.MessageFrom(p, "λNICK is now loved by Sparkie with all her heart. ^w^");
+                    p.Message("Sparkie now loves you with all her heart. ^w^");
+                    Logger.Log(LogType.CommandUsage, "{0} used /{1}", p.name, cmd);
+                }
+                else
+                {
+                    p.Message("You have used this command 2 times. You cannot use it anymore!");
+                }
+
+                p.Extras["GS_CARE"] = used + 1;
+            }
+            else if (cmd.ToLower() == "facepalm")
+            {
+                p.cancelcommand = true;
+                int used = p.Extras.GetInt("GS_FACEPALM");
+
+                if (used < 2)
+                {
+                    p.Message("Seth's bot army just simultaneously facepalm'd at your use of this command.");
+                    Logger.Log(LogType.CommandUsage, "{0} used /{1}", p.name, cmd);
+                }
+                else
+                {
+                    p.Message("You have used this command 2 times. You cannot use it anymore!");
+                }
+
+                p.Extras["GS_FACEPALM"] = used + 1;
             }
         }
     }

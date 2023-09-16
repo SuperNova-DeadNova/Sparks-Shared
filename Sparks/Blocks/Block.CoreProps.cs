@@ -1,5 +1,5 @@
 ﻿/*
-    Copyright 2015 MCGalaxy
+    Copyright 2015 GoldenSparks
         
     Dual-licensed under the Educational Community License, Version 2.0 and
     the GNU General Public License, Version 3 (the "Licenses"); you may
@@ -196,7 +196,7 @@ const string default_names =
         
         static void SetDefaultAliases() {
             Dictionary<string, byte> aliases = Aliases;
-            // Add old MCGalaxy names
+            // Add old GoldenSparks names
             aliases["purple"] = Indigo; aliases["blueviolet"] = Blue;
             aliases["adminium"] = Bedrock; aliases["bookcase"] = Bookshelf;
             aliases["plant"] = Sapling; aliases["mossy_cobblestone"] = MossyRocks;
