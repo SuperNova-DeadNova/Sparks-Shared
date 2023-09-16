@@ -208,7 +208,7 @@ namespace GoldenSparks
         
         static void ShutdownThread(bool restarting, string msg) {
             try {
-                Command.Find("say").Use(Player.Sparks, Server.SoftwareName + " " + Server.InternalVersion + " shutting down... :(");
+                Command.Find("say").Use(Player.Sparks, Server.SoftwareName + " v2." + Server.InternalVersion + " shutting down... :(");
                 Logger.Log(LogType.SystemActivity, "&fGoodbye Cruel World!");
 
                 Logger.Log(LogType.SystemActivity, "Server shutting down ({0})", msg);
