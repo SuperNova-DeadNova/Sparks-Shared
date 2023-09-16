@@ -30,10 +30,10 @@ namespace GoldenSparks
     {
 
         public static string SourceURL = "https://github.com/GoldenSparks/Sparkie/";
-        public const string BaseURL = "https://github.com/GoldenSparks/Sparkie/blob/Sparks/";
-        public const string UploadsURL = "https://github.com/GoldenSparks/Sparkie/tree/Sparks/Uploads";
-        public const string UpdatesURL = "https://github.com/GoldenSparks/Sparkie/raw/Sparks/Uploads/";
-        public const string SQLiteURL = "https://github.com/GoldenSparks/Sparkie/raw/Sparks/Uploads/sqlite3.dll";
+        public const string BaseURL = "https://github.com/GoldenSparks/Sparkie/blob/Sparkie/";
+        public const string UploadsURL = "https://github.com/GoldenSparks/Sparks/tree/Sparkie/Uploads";
+        public const string UpdatesURL = "https://github.com/GoldenSparks/Sparks/raw/Sparkie/Uploads/";
+        public const string SQLiteURL = "https://github.com/GoldenSparks/Sparks/raw/Sparkie/Uploads/sqlite3.dll";
         public static string WikiURL = "https://github.com/UnknownShadow200/MCGalaxy";
 
 

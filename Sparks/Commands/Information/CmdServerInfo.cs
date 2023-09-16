@@ -45,7 +45,7 @@ namespace GoldenSparks.Commands.Info
                       LevelInfo.AllMapFiles().Length, LevelInfo.Loaded.Count, Server.Config.Currency);
 
             TimeSpan up = DateTime.UtcNow - Server.StartTime;
-            p.Message("  Been up for &a{0}&S, running &b{1} &a{2} &f" + Updater.SourceURL,
+            p.Message("  Been up for &a{0}&S, running &b{1} &av2.{2} &f" + Updater.SourceURL,
                       up.Shorten(true), Server.SoftwareName, Server.Version);
 
             int updateInterval = 1000 / Server.Config.PositionUpdateInterval;
