@@ -16,7 +16,7 @@ namespace GoldenSparks
         void SayHello(SchedulerTask task)
         {
 
-            Command.Find("say").Use(Player.Sparks, Server.SoftwareName + " " + Server.InternalVersion + " online! ^w^");
+            Command.Find("say").Use(Player.Sparks, Server.SoftwareName + " v2." + Server.InternalVersion + " online! ^w^");
 
             Logger.Log(LogType.SystemActivity, "&fHello World!");
         }
